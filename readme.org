@@ -1,0 +1,21 @@
+
+
+Redesign the umat in python
+--------------------------
+
+
+* Why are we doing this?
+** How UMAT works
+What happens in UMAT is simple: at its heart, the return-mapping-algorithm, solves a nonlinear system using NR procedure. There are 48 unknowns/equations in this system. 24 are the amount of (plastic) slip and 24 are the plastic slip resistances. Because of the nonlinear nature of this system of equations, we solve this system by perturbing on unnkown at a time and form a jacobian, which we will use to update the values of the unknowns while iterating.
+
+** What we hope to achieve
+- If we can identify the forward pass in the UMAT (the one that we use as a starting point for perturbation), then we can implement that in pytorch. Then we can investigate if this forward pass will give us a gradient. If yes, we use this gradient to multiply with the residual vector
+
+
+** can pytorch compute the inverse of a jacobian?
+If the forward pass is successful, we get the jacobian, but to complete the NR-procedure, we will need to multiply the inverse of this jacobian with the residual vector. Can we do this inversion? 
+
+
+* code coverage
+coverage run -m unittest discover
+coverage report -m
