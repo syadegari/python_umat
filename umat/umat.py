@@ -130,16 +130,17 @@ def materialpropertiesbcc(ElasStif, SlipSys, angles):
     return grainorientationbcc(ElasStif, SlipSys, angles)
     
 
-def get_ks(delta_s, slip_0, k0, w0, s_inf):
-    return k0 * (
-        1 - (slip_0 + delta_s) / s_inf
-    ) ** w0
+def get_ks(delta_s, slip_0):
+
+    return consts.k0_F * (
+        1 - (slip_0 + delta_s) / consts.sInf_F
+    ) ** consts.w0_F
 
 
-def get_H_matrix(ks, consts):
-    N = consts.N
-    return torch.vstackk(N * [ks]) * (
-        consts.q * (torch.ones([N, N]) - torch.eye(N)) + torch.eye(N)
+def get_H_matrix(ks):
+    N = len(ks)
+    return torch.vstack(N * [ks]) * (
+        consts.q0_F * (torch.ones([N, N]) - torch.eye(N)) + torch.eye(N)
     )
     
 
