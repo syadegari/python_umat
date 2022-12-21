@@ -1,0 +1,193 @@
+\documentclass{article}
+\usepackage{dot2texi}
+\usepackage{tikz}
+\usepackage{amsmath, amsfonts}
+\usetikzlibrary{shapes,arrows}
+
+%% ------------------------------------------------
+%% headers for algorithm package
+\usepackage{xcolor,amsmath,mathtools}
+\usepackage[linesnumbered,
+            ruled,
+            vlined,
+            noalgohanging,
+            ]{algorithm2e}
+\DontPrintSemicolon
+
+% Define pseudocode formatting
+\renewcommand{\KwSty}[1]{\textnormal{\textcolor{blue!90!black}{\ttfamily\bfseries #1}}\unskip}
+\renewcommand{\ArgSty}[1]{\textnormal{\ttfamily #1}\unskip}
+\SetKwComment{Comment}{\color{green!50!black}// }{}
+\renewcommand{\CommentSty}[1]{\textnormal{\ttfamily\color{green!50!black}#1}\unskip}
+\newcommand{\assign}{\leftarrow}
+\newcommand{\var}{\texttt}
+\newcommand{\FuncCall}[2]{\texttt{\bfseries #1(#2)}}
+\SetKwProg{Function}{function}{}{}
+\renewcommand{\ProgSty}[1]{\texttt{\bfseries #1}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\SetKwProg{Proc}{procedure}{}{}
+%% ------------------------------------------------
+
+\begin{document}
+
+% \begin{dot2tex}[neato, mathmode]
+%     digraph G  {
+%         node [shape=plaintext];
+%         p [label="+"];
+%         t [texlbl="\LaTeX"];
+%         r [texlbl="$\alpha_1$"];
+%         10-> p;
+%         6 -> t;
+%         r -> t;
+%         t -> p;
+%     }
+% \end{dot2tex}
+
+\section{Why we're doing this!}
+
+\section{Boundary conditions}
+
+\begin{itemize}
+    \item Isothermal ($\theta = 300 \ K$). The thermal driving force is therefore constant.
+    \item $\mathbb C$ is constant since there is only a ferritic phase.
+\end{itemize}
+
+\section{Notation}
+superscripts inside curley braces indicate the slip-system and should not be mistaken with exponents.
+An equation without temporal subscript can be assumed to be valid in any timestep.
+A second subscript, if exists, denotes the timestep or iteration number, depending on the context, i.e., ${\bf F}_{e, n+1}$ is the elastic deformation gradient at time step $n+1$.
+
+\section[]{Summary of formula used in the numerical implementation}
+
+\begin{equation}
+    {\bf F}_{p, n+1} = \left({\bf I} - \sum_{i=1}^N \Delta \gamma^{(i)} {\bf m}^{(i)} \otimes {\bf n}^{(i)}\right)^{-1} {\bf F}_{p, n}
+\end{equation}
+
+\begin{equation}
+    \bf S = \mathbb C \bf E
+\end{equation}
+
+\begin{equation}
+    g_m^{(i)} = {\bf F}_e^{\sf T} {\bf F}_e {\bf S} \cdot \left( {\bf m}^{(i)} \otimes {\bf n}^{(i)} \right)
+\end{equation}
+
+\begin{equation}
+    k^{(j)} = k_{F,0} \left( 1 - \frac{s^{(j)}}{s_{F,\infty}} \right)^u
+\end{equation}
+
+\begin{equation}
+    H^{(i,j)} =
+    \begin{cases}
+        k^{(j)}       &   i = j\\
+        q_F k^{(j)}   &   i \neq j
+    \end{cases}
+\end{equation}
+
+\begin{equation}
+    w^{(i)} = \frac{1}{c_F \mu_F N} \sum_{j=1}^N H^{(i,j)}
+\end{equation}
+
+\begin{equation}
+    \beta_{n+1} = \beta_n + \Delta \beta = \beta_n + \sum_{i=1}^N w_{n+1}^{(i)} \Delta \gamma^{(i)}
+\end{equation}
+
+\begin{equation}
+    g_d^{(i)} = \omega_F \mu_F \beta w^{(i)}
+\end{equation}
+
+\begin{equation}
+    g_{th}^{(i)} = g_{th} = \rho_0 \theta \phi_F
+\end{equation}
+
+\begin{equation}
+    g^{(i)} = g_{m}^{(i)} + g_{th}^{(i)} + g_{d}^{(i)}
+\end{equation}
+
+
+As before, we have two equations of rate form and use them for temporal discritization:
+
+\begin{equation}
+    \dot{s}^{(i)} = \sum_{j=1}^N H^{(i,j)} \dot{\gamma}^{(j)}
+\end{equation}
+
+\begin{equation}
+    \dot{\gamma}^{(i)} =
+    \begin{cases}
+        \dot{\gamma}_{F,0} \left(\left(\frac{g^{(i)}}{s^{(i)}}\right)^{\frac{1}{p}} - 1 \right) & g^{(i)} > s^{(i)}\\
+        0 & \text{otherwise}
+    \end{cases}
+\end{equation}
+
+which lead to the following residuals
+
+\begin{equation}
+    r_I^{(i)} \coloneqq \Delta s^{(i)}\ - \sum_{j=1}^N H^{(i,j)} \Delta \gamma^{(j)}
+\end{equation}
+
+
+\begin{equation}
+    r_{II}^{(i)} \coloneqq
+    \begin{cases}
+        \Delta {\gamma}^{(i)} - \Delta t \dot{\gamma}_0 & g^{(i)} > s^{(i)}\\
+        0 & \text{otherwise}
+    \end{cases}
+\end{equation}
+
+
+\section{Visualization of computed values}
+
+The (forward) dependency graph of the residuals ${\bf r}_I$ and ${\bf r}_{II}$ is shown in figure \ref{fig:compu-graph} . Not shown in this graph are all the constants factors and values from timestep $n$, as well as field variables ${\bf F}_n$ and ${\bf F}_{n+1}$.
+
+\begin{figure}[]
+    \include{comp_graph.tex}
+    \caption{Graph of forward call of computed residuals. The nodes that indicate roots are highlighted with pale blue, while green indicates the leaf of the graph.}
+    \label{fig:compu-graph}
+\end{figure}
+
+
+\section{Algorithm}
+
+\begin{algorithm}
+    \caption{Return mapping algorithm with penalty term}
+    \KwIn{\;
+    \Indpp
+    Iteration index: $k \assign 0$\;
+    Primary variables:
+    $\Delta {\boldsymbol \gamma}_k = {\bf 0}$,
+    $\Delta {\bf s}_k = {\bf 0}$\;
+    Converged variables from time step $n$: $\beta_n$,
+    ${\bf F}_{p,n}$,
+    $\Delta {\bf s}_n$\,
+    $\Delta {\boldsymbol \gamma}_n$\;
+    Field variables: ${\bf F}_n$, ${\bf F}_{n+1}$
+	}
+
+    \Proc{update} {
+        \SetAlgoLined
+        $k \assign k+1$\;
+        update $\sigma_k$\;
+    }
+\end{algorithm}
+
+Conditions $\Delta \gamma_k^{(i)} \ge 0$ and $\Delta s_{n+1}^{(i)} \le s_{\infty}$ translate to the following penalty term:
+
+\begin{equation}
+    \sigma_k \sum_{i=1}^N
+    \left[
+        \max \left( 0, - \Delta \gamma_k^{(i)}\right) ^ 2 +
+        \max \left( 0, \Delta s_k^{(i)} + s_n^{(i)} - s_{\infty}\right) ^ 2
+    \right]
+\end{equation}
+
+\subsection{Practical considerations}
+\begin{itemize}
+    \item How many iterations should be performed (maximum number of iterations)?
+    \item Ratio of $\|{\bf r}_I\|$ and $\|{\bf r}_{II}\|$. Do we need to use normalization so they are comparable magnitude-wise? Report the residuals for diagnostic and debug.
+    \item Report the rate of convergence for diagnostics
+    \item When is it required to perform half stepping?
+    \item Update $\sigma_k$ every iteration or every few iterations?
+\end{itemize}
+
+
+\end{document}

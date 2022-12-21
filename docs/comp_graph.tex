@@ -1,0 +1,56 @@
+% arrow type could be one of "-stealth, -to, -latex, -diamond, -o, ->>, -hooks"
+\begin{dot2tex}[dot, mathmode, scale=0.8]
+    digraph G{
+        d2tfigpreamble = "\Huge";
+        graph [mindist=0.5];
+        edge [style="-stealth, very thick"];
+        node [shape=none];
+
+        k [texlbl="$k^{(i)}$"];
+        H [texlbl="$H^{(i,j)}$"];
+        w [texlbl="$w^{(i)}$"];
+        beta [texlbl="$\beta$"];
+
+        node [fixedsize=false, shape=none, width=1, style="fill=blue!20"];
+        ds [texlbl="$\Delta s^{(i)}$"];
+        dgamma [texlbl="$\Delta \gamma^{(i)}$"];
+        node [shape=none, style=""];
+
+        gm [texlbl="$g^{(i)}_m$"];
+        gd [texlbl="$g^{(i)}_d$"];
+
+        g [texlbl="$g^{(i)}$"];
+
+        Fp [texlbl="${\bf F}_p$"];
+        Fe [texlbl="${\bf F}_e$"];
+        S [texlbl="${\bf S}$"];
+
+        node [fixedsize=false, shape=none, width=1, style="fill=green!20"];
+        r1 [texlbl="${\bf r}_I$"];
+        r2 [texlbl="${\bf r}_{II}$"];
+        node [shape=none, style=""];
+
+        ds -> k;
+        k -> H;
+        H -> w;
+        w -> beta;
+        w -> gd;
+        dgamma -> beta;
+        beta -> gd;
+        gd -> g;
+        gm -> g;
+        dgamma -> Fp;
+        Fp -> Fe;
+        Fe -> S;
+        Fe -> gm;
+        S -> gm;
+
+        ds -> r1;
+        dgamma -> r1;
+        H -> r1;
+
+        dgamma -> r2;
+        g -> r2;
+        ds -> r2;
+    }
+\end{dot2tex}
