@@ -152,9 +152,11 @@ def get_gd(beta, ws):
     return -consts.omega_F * consts.mu_F * beta * ws
 
 
-def get_PK2(C_e1, elas_stiff):
-    '''sum is faster than einsum'''
-    return (elas_stiff * (0.5 * (C_e1 - I)).reshape(1, 1, 3, 3)).sum(axis=(2, 3))
+def get_PK2(C_e, elas_stiff):
+    '''We write this function with because sum is
+    faster than einsum (almost twice)
+    '''
+    return (elas_stiff * (0.5 * (C_e - I)).reshape(1, 1, 3, 3)).sum(axis=(2, 3))
 
 
 def get_gm(F_e1, slip_sys, elas_stiff):
