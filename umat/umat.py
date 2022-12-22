@@ -198,13 +198,6 @@ def functional():
     )
     
 
-def returnmappingbcc(DeltaGammaA, SlipResA, nGammaA, PDF, PDFCrit,
-                     idGammaA, FP0, F1, BetaA, DeltaT, SubStepping,
-                     ConTangent, temp, dtemp,
-                     ElasStif, SlipSys, ShearMod):
-    ...
-
-
 def umat(stress, statev, tags_gamma, ddsdde, time, dtime,
          temp, nstatv, dfgrd0, dfgrd1, angles):
 
