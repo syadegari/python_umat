@@ -198,47 +198,6 @@ def functional():
     )
     
 
-def plasticdefgradbcc(delta_gamma, id_gamma, slip_sys, Fp0, Fp1):
-    ...
-    Lp = I - Lp
-    Fp1 = torch.linalg.inv(Lp) @ Fp0
-    return
-
-
-def slipsystemcheckbcc(PDF, PDFCrit, DeltaGammaA, idGammaA,
-                       nGammaA, TagGamma, UpgradeSlipSys, iterP):
-    '''
-    Checks the consistency condition of active slip systems
-    '''
-#
-#  declaration of variables
-#      double precision PDF(24),PDFCrit(24),DeltaGammaA(nGammaA)
-#      integer i,nGammaA,TagGamma(24),idGammaA(nGammaA),iterP
-#      logical UpgradeSlipSys,PlotDebug,PlotResult
-#
-# 
-#
-#  first check: if there are any active systems become inactive
-    for i in range(nGammaA):
-        if DeltaGammaA[i] <= 0.0:
-            TagGamma[idGammaA[i]] = 0
-            UpgradeSlipSys = True
-             
-    if UpgradeSlipSys: # goto 64
-        return UpgradeSlipSys 
-#
-#  second check: if there are any inactive systems become active
-    for i in range(24):
-        if TagGamma[i] == 0 :
-            if iterP <= 6:
-                if PDF[i] > PDFCrit[i]:
-                    TagGamma[i] = 1
-                    UpgradeSlipSys = True
-#     
-#  64   continue
-    return UpgradeSlipSys
-
-
 def returnmappingbcc(DeltaGammaA, SlipResA, nGammaA, PDF, PDFCrit,
                      idGammaA, FP0, F1, BetaA, DeltaT, SubStepping,
                      ConTangent, temp, dtemp,
