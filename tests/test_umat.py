@@ -81,6 +81,34 @@ class TestUmat(unittest.TestCase):
             torch.einsum('ijkl,kl->ij', CC, 0.5 * (Fe.T @ Fe - torch.eye(3)))
         )
 
+    def test_einsum_vs_sum(self):
+        '''
+        We want to make sure that the gradient computed two ways are the same
+        The reason for switching to sum from einsum is that sum is almost twice
+        as fast as einsum
+        '''
+        # stiffness and strain tensors
+        CC = torch.rand(3, 3, 3, 3)
+        E = torch.rand(3, 3, requires_grad=True)
+
+        grad_from_einsum = torch.zeros_like(E)
+        grad_from_sum = torch.zeros_like(E)
+
+        # compute the gradient using einsum
+        l_einsum = torch.einsum('ijkl,kl->ij', CC, E).norm()
+        E.grad = None
+        l_einsum.backward()
+        grad_from_einsum.copy_(E.grad)
+
+        # compute the gradient using sum
+        l_sum = (CC * E.reshape(1, 1, 3, 3)).sum(axis=(2, 3)).norm()
+        E.grad = None
+        l_sum.backward()
+        grad_from_sum.copy_(E.grad)
+
+        torch.testing.assert_allclose(l_einsum, l_sum)
+        torch.testing.assert_allclose(grad_from_einsum, grad_from_sum)
+
 
         
 if __name__ == '__main__':
