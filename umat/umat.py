@@ -152,8 +152,6 @@ def get_gd(beta, ws):
     return -consts.omega_F * consts.mu_F * beta * ws
 
 
-def get_r_II(ds, H, dgamma):
-    return ds - H @ dgamma
 
 def get_gm(F_e1, slip_sys, elas_stiff):
     '''
@@ -164,6 +162,10 @@ def get_gm(F_e1, slip_sys, elas_stiff):
     return ((C_e1 @ S).reshape(1, 3, 3) * slip_sys).sum(axis=(1, 2))
 
 def get_r_I(gs_1, slip_1, dgamma, dt, known_vals, consts):
+
+def get_r_I(ds, H, dgamma):
+    return ds - H @ dgamma
+
 
     def get_indicator(x, threshold):
         with torch.no_grad():
