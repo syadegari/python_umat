@@ -168,7 +168,7 @@ def get_r_I(gs_1, slip_1, dgamma, dt, known_vals, consts):
             return (x > threshold).to(torch.float)
  
     # first we form the vector and then zero the entries 
-    ret = dgamma - dt * consts.GammaDot0_F * ((gs_1 / slip_1) ** (1 / consts.mExp_F) - 1.0)
+    ret = dgamma - dt * consts.GammaDot0_F * ((gs_1 / slip_1) ** (1 / consts.pExp_F) - 1.0)
     return ret * get_indicator(gs_1, slip_1)
 
 def functional():
