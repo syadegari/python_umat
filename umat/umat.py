@@ -68,26 +68,25 @@ def nonschmidstressbcc(Schmid,NonSchmid):
     return consts.NGlide * NonSchmid
 
     
-def rotationmatrix(angle1, angle2, angle3):
+def rotation_matrix(angle1, angle2, angle3):
     '''defines the rotation matrix using 323 euler rotations'''
     # rotation matrix of the first rotation (angle1)
     angle1 = torch.tensor(angle1)
     angle2 = torch.tensor(angle2)
     angle3 = torch.tensor(angle3)
-    one = torch.tensor(1.0)
 
     R1 = torch.zeros([3, 3])
     R1[0, 0] =  torch.cos(angle1)
     R1[0, 1] =  torch.sin(angle1)
     R1[1, 0] = -torch.sin(angle1)
     R1[1, 1] =  torch.cos(angle1)
-    R1[2, 2] =  one
+    R1[2, 2] =  1.0
     #
     #  rotation matrix of the second rotation (angle2)
     R2 = torch.zeros([3, 3])
     R2[0, 0] =  torch.cos(angle2)
     R2[0, 2] = -torch.sin(angle2)
-    R2[1, 1] =  one
+    R2[1, 1] =  1.0
     R2[2, 0] =  torch.sin(angle2)
     R2[2, 2] =  torch.cos(angle2)
     #
@@ -97,7 +96,7 @@ def rotationmatrix(angle1, angle2, angle3):
     R3[0, 1] =  torch.sin(angle3)
     R3[1, 0] = -torch.sin(angle3)
     R3[1, 1] =  torch.cos(angle3)
-    R3[2, 2] =  one
+    R3[2, 2] =  1.0
 
 #
 #  calculate the overall rotation matrix
@@ -105,9 +104,9 @@ def rotationmatrix(angle1, angle2, angle3):
     return RM
 
 
-def grainorientationbcc(ElasStif, SlipSys, angles):
+def grain_orientation_bcc(ElasStif, SlipSys, angles):
     '''rotates the stiffness and slip systems with the calculated rotation matrix'''
-    rm = rotationmatrix(*angles)
+    rm = rotation_matrix(*angles)
     #
     rotated_slip_system = torch.einsum(
         'kab,ia,jb->kij',
@@ -122,8 +121,8 @@ def grainorientationbcc(ElasStif, SlipSys, angles):
     return rotated_slip_system, rotated_elas_stiffness
 
 
-def materialpropertiesbcc(ElasStif, SlipSys, angles):
-    return grainorientationbcc(ElasStif, SlipSys, angles)
+def material_properties_bcc(ElasStif, SlipSys, angles):
+    return grain_orientation_bcc(ElasStif, SlipSys, angles)
     
 
 def get_ks(delta_s, slip_0):
