@@ -153,8 +153,8 @@ def get_beta(dgamma, ws, known_vals):
     return known_vals.beta_0 + torch.dot(ws, dgamma)
 
 
-def get_gd(beta, ws, consts):
-    return - consts.omega * consts.mu * beta * ws
+def get_gd(beta, ws):
+    return -consts.omega_F * consts.mu_F * beta * ws
 
 
 def get_r_II(ds, H, dgamma):
