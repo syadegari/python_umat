@@ -13,8 +13,8 @@ class FerriticPhaseConstants:
     Rho_0: float =  78.e+2      # 78.d-16   #  (Kg/um^3)
 
     # slip resistance parameters
-    W_F: float  = 7.e0
-    mu_F: float = 55.e0           # GPa
+    omega_F: float = 7.e0
+    mu_F: float    = 55.e0           # GPa
 
     # Hardening parameteres for ferrite
     s0_F: float   = 1.58e-1     # GPa     #1.58d-4   (N/um^2)
