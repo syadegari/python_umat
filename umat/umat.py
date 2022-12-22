@@ -152,6 +152,12 @@ def get_gd(beta, ws):
     return -consts.omega_F * consts.mu_F * beta * ws
 
 
+def plastic_def_grad(dgamma, slip_sys, F_p0):
+    return torch.linalg.inv(
+        I - (dgamma.reshape(-1, 1, 1) * slip_sys).sum(axis=0)
+    ) @ F_p0
+
+
 def get_PK2(C_e, elas_stiff):
     '''We write this function with because sum is
     faster than einsum (almost twice)
