@@ -20,7 +20,7 @@ class FerriticPhaseConstants:
     s0_F: float   = 1.58e-1     # GPa     #1.58d-4   (N/um^2)
     sInf_F: float = 4.12e-1     # GPa     #4.12d-4   (N/um^2)
     k0_F: float   = 1.9e0       # GPa     #1.9d-3    (N/um^2)
-    w0_F: float   = 2.8e0
+    uExp_F: float = 2.8e0
     q0_F: float   = 1.e0
     c0_F: float   = 5.e-1               
 
