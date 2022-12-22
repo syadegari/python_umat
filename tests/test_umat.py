@@ -69,6 +69,18 @@ class TestUmat(unittest.TestCase):
             umat.consts.Rho_0 * umat.consts.Theta0 * umat.consts.phi_F
         )
 
+    def test_get_PK2(self):
+        '''
+        PK2_{ij} = CC_{ijkl} E_{kl}
+        '''
+        Fe = torch.rand(3, 3)
+        CC = torch.rand(3, 3, 3, 3)
+        #
+        torch.testing.assert_allclose(
+            umat.get_PK2(Fe.T @ Fe, CC),
+            torch.einsum('ijkl,kl->ij', CC, 0.5 * (Fe.T @ Fe - torch.eye(3)))
+        )
+
 
         
 if __name__ == '__main__':
