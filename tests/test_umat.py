@@ -1,13 +1,6 @@
 import unittest
-import torch.testing as test
 from .umat_imports import umat
-
 import torch
-
-from dataclasses import dataclass
-
-
-
 
 class TestUmat(unittest.TestCase):
 
@@ -55,9 +48,7 @@ class TestUmat(unittest.TestCase):
         torch.testing.assert_allclose(ws, (1 / C) * torch.tensor([4, 6]))
 
     def test_get_beta(self):
-        ...
 
-        
         
 if __name__ == '__main__':
     unittest.main()        
