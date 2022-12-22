@@ -60,6 +60,15 @@ class TestUmat(unittest.TestCase):
             1
         )
 
+    def test_gth_constant(self):
+        '''
+        g_th = Rho_0 * Theta0 * phi_F
+        '''
+        torch.testing.assert_allclose(
+            umat.consts.g_th,
+            umat.consts.Rho_0 * umat.consts.Theta0 * umat.consts.phi_F
+        )
+
 
         
 if __name__ == '__main__':
