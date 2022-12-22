@@ -155,6 +155,13 @@ def get_gd(beta, ws):
 def get_r_II(ds, H, dgamma):
     return ds - H @ dgamma
 
+def get_gm(F_e1, slip_sys, elas_stiff):
+    '''
+    F_e1 : F_{e, n+1}
+    '''
+    C_e1 = F_e1.T @ F_e1 # we use this twice
+    S = get_PK2(C_e1, elas_stiff)
+    return ((C_e1 @ S).reshape(1, 3, 3) * slip_sys).sum(axis=(1, 2))
 
 def get_r_I(gs_1, slip_1, dgamma, dt, known_vals, consts):
 
@@ -179,17 +186,6 @@ def plasticdefgradbcc(delta_gamma, id_gamma, slip_sys, Fp0, Fp1):
     Lp = I - Lp
     Fp1 = torch.linalg.inv(Lp) @ Fp0
     return
-
-
-def get_gm(dgamma, F1, Fp_0):
-    '''
-    Fp_0 : F_{p, n}
-    F1: F_{n + 1}
-    '''
-    Fp_1 = plasticdefgradbcc(dgamma, Fp_0)
-    Fe_1 = F1 @ torch.linalg.inv(Fp_1)
-    S = get_PK2(Fe_1, elas_stiff)
-    return torch.einsum('ijk,jk->i', m_dyad_n, Fe_1.T @ Fe_1 @ S)
 
 
 def get_PK2(Fe, elas_stiff):
