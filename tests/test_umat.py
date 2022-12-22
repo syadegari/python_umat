@@ -48,6 +48,18 @@ class TestUmat(unittest.TestCase):
         torch.testing.assert_allclose(ws, (1 / C) * torch.tensor([4, 6]))
 
     def test_get_beta(self):
+        '''
+        beta_{n+1} = beta_n + dot(ws, dgmamma)
+        '''
+        beta_0 = 1
+        dgamma = torch.zeros(24)
+        ws = torch.zeros(24)
+
+        torch.testing.assert_allclose(
+            umat.get_beta(dgamma, ws, beta_0),
+            1
+        )
+
 
         
 if __name__ == '__main__':
