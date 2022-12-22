@@ -144,8 +144,8 @@ def get_ws(H):
     return (1. / (consts.c0_F * consts.mu_F * N)) * H.sum(axis=0)
 
 
-def get_beta(dgamma, ws, known_vals):
-    return known_vals.beta_0 + torch.dot(ws, dgamma)
+def get_beta(dgamma, ws, beta_0):
+    return beta_0 + torch.dot(ws, dgamma)
 
 
 def get_gd(beta, ws):
