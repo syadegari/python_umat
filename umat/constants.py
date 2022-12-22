@@ -34,5 +34,11 @@ class FerriticPhaseConstants:
     # Thermal driving force is constant for an insothermal process
     g_th: float = 0.0099918 # Rho_0 * Theta0 * phi_F (GPa)
 
+    # define the effective non-glide parameter (calibrated for BCC ferrite,
+    # using the data of Franciosi (1983) for alpha-iron)
+    # values: NGlide = 0.12
+    NGlide = 1.2e-1
+
+
     
 consts = FerriticPhaseConstants()

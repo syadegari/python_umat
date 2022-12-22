@@ -36,10 +36,6 @@ def nonschmidstressbcc(Schmid,NonSchmid):
     computes non-Schmid stress according to Bassani's convention
     '''
     NonSchmid = torch.zeros_like(Schmid)
-    # define the effective non-glide parameter (calibrated for BCC ferrite,
-    # using the data of Franciosi (1983) for alpha-iron)
-    # values: NGlide = 0.12
-    NGlide = 1.2e-1
     # compute the non-glide stress (non-Schmid stress)
     NonSchmid[0]  = Schmid[5]      #      NonSchmid(1)  = NGlide*Schmid(6) 
     NonSchmid[1]  = Schmid[2]      #      NonSchmid(2)  = NGlide*Schmid(3) 
@@ -69,7 +65,7 @@ def nonschmidstressbcc(Schmid,NonSchmid):
     NonSchmid[22] = Schmid[21]     #      NonSchmid(23) = NGlide*Schmid(22)
     NonSchmid[23] = Schmid[18]     #      NonSchmid(24) = NGlide*Schmid(19)
     #
-    return NGlide * NonSchmid
+    return consts.NGlide * NonSchmid
 
     
 def rotationmatrix(angle1, angle2, angle3):
