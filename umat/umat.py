@@ -161,12 +161,12 @@ def get_gm(F_e1, slip_sys, elas_stiff):
     S = get_PK2(C_e1, elas_stiff)
     return ((C_e1 @ S).reshape(1, 3, 3) * slip_sys).sum(axis=(1, 2))
 
-def get_r_I(gs_1, slip_1, dgamma, dt, known_vals, consts):
 
 def get_r_I(ds, H, dgamma):
     return ds - H @ dgamma
 
 
+def get_r_II(gs_1, slip_1, dgamma, dt):
     def get_indicator(x, threshold):
         with torch.no_grad():
             return (x > threshold).to(torch.float)
