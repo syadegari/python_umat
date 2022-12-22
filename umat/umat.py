@@ -167,11 +167,20 @@ def get_r_I(ds, H, dgamma):
 
 
 def get_r_II(gs_1, slip_1, dgamma, dt):
+    '''
+    gs_1 : g^{(i)}_{n+1}
+    slip_1 : s^{(i)}_{n+1}
+    dgamma : \Delta\gamma_{n+1}
+    dt : \Delta t = t_{n+1} - t_n
+    '''
+    #
     def get_indicator(x, threshold):
         with torch.no_grad():
             return (x > threshold).to(torch.float)
- 
-    # first we form the vector and then zero the entries 
+    #
+    # first we form the vector we want to output and then
+    # zero the entries below the threshold using the get_indicator function
+    #
     ret = dgamma - dt * consts.GammaDot0_F * ((gs_1 / slip_1) ** (1 / consts.pExp_F) - 1.0)
     return ret * get_indicator(gs_1, slip_1)
 
