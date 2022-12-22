@@ -25,7 +25,7 @@ class FerriticPhaseConstants:
     c0_F: float   = 5.e-1               
 
     # Plastic Kinetic Law ferrite
-    mExp_F: float      = 2.e-2
+    pExp_F: float      = 2.e-2
     GammaDot0_F: float = 1.e-3       
     phi_F: float       = 4.27e-9   # GJ/(kg.K)  #4.27350427d+6   (N.um/kg.K)       
 
