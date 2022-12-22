@@ -152,6 +152,10 @@ def get_gd(beta, ws):
     return -consts.omega_F * consts.mu_F * beta * ws
 
 
+def get_PK2(C_e1, elas_stiff):
+    '''sum is faster than einsum'''
+    return (elas_stiff * (0.5 * (C_e1 - I)).reshape(1, 1, 3, 3)).sum(axis=(2, 3))
+
 
 def get_gm(F_e1, slip_sys, elas_stiff):
     '''
@@ -197,13 +201,6 @@ def plasticdefgradbcc(delta_gamma, id_gamma, slip_sys, Fp0, Fp1):
     Lp = I - Lp
     Fp1 = torch.linalg.inv(Lp) @ Fp0
     return
-
-
-def get_PK2(Fe, elas_stiff):
-    #
-    return torch.einsum(
-        'ijkl,kl->ij', elas_stiff, 0.5 * (Fe.T @ Fe - I)
-    )
 
 
 def get_PK1(F, Fp, elas_stiff):
