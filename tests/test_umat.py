@@ -41,7 +41,18 @@ class TestUmat(unittest.TestCase):
         )
 
     def test_get_ws(self):
-        ...
+        '''
+        w^{(i)} = (1/C) * sum_j H(j, i)      # sum on j index
+        where C = c_F * mu_F * N
+
+        Asuume H = [[1 2],
+                    [3 4]]
+        then ws = 1/C * [4 6]
+        '''
+        C = umat.consts.c0_F * umat.consts.mu_F * 2
+        ws = umat.get_ws(torch.tensor([[1, 2],
+                                       [3, 4]]))
+        torch.testing.assert_allclose(ws, (1 / C) * torch.tensor([4, 6]))
 
     def test_get_beta(self):
         ...
