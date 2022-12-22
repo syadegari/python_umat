@@ -31,8 +31,8 @@ class FerriticPhaseConstants:
 
     N: int = 24 # number of slip systems
 
-    def __post_init__(self):
-        # Thermal driving force is constant for an insothermal process
-        self.g_th = self.Rho_0 * self.Theta0 * self.phi_F
+    # Thermal driving force is constant for an insothermal process
+    g_th: float = 0.0099918 # Rho_0 * Theta0 * phi_F (GPa)
 
+    
 consts = FerriticPhaseConstants()
