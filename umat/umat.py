@@ -205,11 +205,6 @@ def plasticdefgradbcc(delta_gamma, id_gamma, slip_sys, Fp0, Fp1):
     return
 
 
-def get_PK1(F, Fp, elas_stiff):
-    Fe = F @ torch.linalg.inv(Fp)
-    PK2 = get_PK2(F, Fp, elas_stiff)
-    
-    
 def slipsystemcheckbcc(PDF, PDFCrit, DeltaGammaA, idGammaA,
                        nGammaA, TagGamma, UpgradeSlipSys, iterP):
     '''
