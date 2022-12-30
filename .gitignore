@@ -1,0 +1,10 @@
+__pycache__
+*fls
+*log
+*pdf
+*aux
+*dot
+*latexmk
+*gz
+*DS_Store
+.ipynb_checkpoints
