@@ -19,3 +19,23 @@ If the forward pass is successful, we get the jacobian, but to complete the NR-p
 * code coverage
 coverage run -m unittest discover
 coverage report -m
+
+* List of code modification
+** Implement the inverse gamma relation, as mentioned in Denny's thesis
+** Correct get_r_II function. In case of g^{i} < s^{i}, we should have \Delta\gamma^{i} and not zero.
+** Implement barrier penalty formulation. 
+** Factor drive.py into smaller routines.
+** Run UMAT-Fortran with the same orientation as the one we use in python-umat and collect statistics
+*** Compare stress prior to yield from both methods
+**** Implement stress calculation (Cauchy) in python-umat.
+*** How many iterations are done in RETURNMAPPINGBCC
+*** Residual at the end of the return mapping 
+*** How many times we call slip-system-check routine
+*** Time that takes for a single run of return mapping algorithm
+** Make the code flexible enough so it runs with optimizers from optim modules, the ad-hoc optimizer, where we zero parameters (that violate constraints) after each iteration.
+** Find small numerical "constrained optimization problems" to test various optimization algorithms.
+** Write more tests
+** Read about L1-regularization (Could it lead to sparse parameter set?)
+** Try LBFGS 
+*** How to include constraints in the formulation of LBFGS? 
+
