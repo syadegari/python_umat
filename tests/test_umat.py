@@ -341,6 +341,26 @@ class TestEffectiveScalarMicrostrain(BaseTest):
         beta_1_expected = beta_0 + (dgamma * ws).sum()
         torch.testing.assert_close(beta_1, beta_1_expected)
 
+    def test_EffectiveScalarMicrostrain_batch(self):
+        dgamma = torch.rand(2, 24)
+        ws = torch.rand(2, 24)
+        beta0 = torch.rand(2)
+
+        dgamma1, dgamma2 = dgamma
+        ws1, ws2 = ws
+        beta01, beta02 = beta0
+
+        torch.testing.assert_close(
+            vmap(umat.get_beta)(dgamma, ws, beta0),
+            rearrange(
+                [
+                    umat.get_beta(dgamma1, ws1, beta01),
+                    umat.get_beta(dgamma2, ws2, beta02),
+                ],
+                "b ... -> b ...",
+            ),
+        )
+
 
 class TestMicrostrainWeights(BaseTest):
     def setUp(self) -> None:
@@ -434,6 +454,29 @@ class TestSlipHardeningModulus(BaseTest):
         )
         ks_expected = torch.zeros(24)
         torch.testing.assert_close(ks, ks_expected)
+
+    def test_SlipHardeningModulus_batch(self):
+        """
+        We should be careful with construction s0 and ds because the sum
+        cannot be bigger that s_inf.
+        """
+        slip_res_0 = 0.8 * self.s_Finf * torch.rand(2, 24)
+        ds = 0.2 * self.s_Finf * torch.rand(2, 24)
+
+        #
+        ds1, ds2 = ds
+        slip_res_01, slip_res_02 = slip_res_0
+
+        torch.testing.assert_close(
+            vmap(umat.get_ks)(ds, slip_res_0),
+            rearrange(
+                [
+                    umat.get_ks(ds1, slip_res_01),
+                    umat.get_ks(ds2, slip_res_02),
+                ],
+                "b ... -> b ...",
+            ),
+        )
 
 
 class TestRotateSlipSystem(unittest.TestCase):
