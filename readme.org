@@ -1,5 +1,3 @@
-
-
 Redesign the umat in python
 --------------------------
 
@@ -35,7 +33,9 @@ coverage report -m
 ** Make the code flexible enough so it runs with optimizers from optim modules, the ad-hoc optimizer, where we zero parameters (that violate constraints) after each iteration.
 ** Find small numerical "constrained optimization problems" to test various optimization algorithms.
 ** Write more tests
-** Read about L1-regularization (Could it lead to sparse parameter set?)
+** DONE Read about L1-regularization (Could it lead to sparse parameter set?)
+A very wishy-washy explanation, based on what I took from Goodfelllow's book:
+ The main effect of L1-regularization is that the gradient does not scale with the value of parameters, as is the case with L2-regularization. Instead, we get unit gradients for each parameter of the optimization. This, combine with a large penalty coefficient, pushes the parameter to the boundaries (or beyond, which in that case, it is being projected back to the boundary) of the subspace that defines the permissible space for optimization. In short, there is a higher chance, although not guaranteed, that L1-regularization will lead to sparse parameter set than L2-regularization.
 ** Try LBFGS 
 *** How to include constraints in the formulation of LBFGS? 
 
