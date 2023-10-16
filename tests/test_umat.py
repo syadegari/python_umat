@@ -369,7 +369,7 @@ class TestMicrostrainWeights(BaseTest):
         ws_expected = 1 / (self.cF * self.muF * N) * H_matrix.sum(dim=0)
         torch.testing.assert_close(ws, ws_expected)
 
-    def test_test_MicrostrainWeights_batch(self):
+    def test_MicrostrainWeights_batch(self):
         H = torch.rand(2, 24, 24)
         H1, H2 = H
 
