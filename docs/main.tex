@@ -138,11 +138,25 @@ which lead to the following residuals
 
 \section{Visualization of computed values}
 
-The (forward) dependency graph of the residuals ${\bf r}_I$ and ${\bf r}_{II}$ is shown in figure \ref{fig:compu-graph} . Not shown in this graph are all the constants factors and values from timestep $n$, as well as field variables ${\bf F}_n$ and ${\bf F}_{n+1}$.
+\section{Visualization of computed values}
 
-\begin{figure}[]
-    \include{comp_graph.tex}
-    \caption{Graph of forward call of computed residuals. The nodes that indicate roots are highlighted with pale blue, while green indicates the leaf of the graph.}
+The (forward) dependency graph of the residuals ${\bf r}_I$ and ${\bf r}_{II}$ is shown in figure \ref{fig:compu-graph}. 
+Not shown in this graph are all the constants factors and values from timestep $n$, as well as field variables ${\bf F}_n$ and ${\bf F}_{n+1}$.
+
+% \begin{figure}
+%     \include{comp_graph1.tex}
+%     \caption{Graph of forward call of computed residuals. The nodes that indicate roots are highlighted with pale blue, while green indicates the leaf of the graph.}
+%     \label{fig:compu-graph}
+% \end{figure}
+
+\begin{figure}
+    \include{comp_graph2.tex}
+    \caption{Graph of forward call of computed residuals. The nodes that indicate roots are highlighted with pale blue, 
+    while green indicates the leaf of the graph. To make the graph less populated 
+    and easier to read, we have assumed all quantities without a specified time step to be at the $n+1$ time step.
+    Quantities such as the orientation of the grain, which is used for rotating the slip systems and the elastic stiffness, 
+    as well as the deformation gradients at the end of the step, namely ${\bf F}_{n+1}$, are not shown in this graph.
+    }
     \label{fig:compu-graph}
 \end{figure}
 

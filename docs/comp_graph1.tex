@@ -1,55 +1,44 @@
 % arrow type could be one of "-stealth, -to, -latex, -diamond, -o, ->>, -hooks"
-
-
-\begin{dot2tex}[dot, mathmode, scale=0.6]
+\begin{dot2tex}[dot, mathmode, scale=0.8]
     digraph G{
         d2tfigpreamble = "\Huge";
-        graph [mindist=0.5, layout="dot"];
+        graph [mindist=0.5];
         edge [style="-stealth, very thick"];
         node [shape=none];
 
-        node [fixedsize=false, shape=none, width=1, style="fill=red!20"];
-        sn [texlbl="${\bf s}_n$"]
-        betan [texlbl="$\beta_n$"]
-        Fpn [texlbl="${\bf F}_{p,n}$"]
-        node [shape=none, style=""];
-
-        k [texlbl="$\bf k$"];
-        H [texlbl="$\bf H$"];
-        w [texlbl="$\bf w$"];
+        k [texlbl="$k^{(i)}$"];
+        H [texlbl="$H^{(i,j)}$"];
+        w [texlbl="$w^{(i)}$"];
         beta [texlbl="$\beta$"];
 
         node [fixedsize=false, shape=none, width=1, style="fill=blue!20"];
-        ds [texlbl="$\Delta {\bf s}$"];
-        dgamma [texlbl="$\Delta {\boldsymbol \gamma}$"];
+        ds [texlbl="$\Delta s^{(i)}$"];
+        dgamma [texlbl="$\Delta \gamma^{(i)}$"];
         node [shape=none, style=""];
 
-        gm [texlbl="${\bf g}_m$"];
-        gd [texlbl="${\bf g}_d$"];
+        gm [texlbl="$g^{(i)}_m$"];
+        gd [texlbl="$g^{(i)}_d$"];
 
-        g [texlbl="$\bf g$"];
+        g [texlbl="$g^{(i)}$"];
 
         Fp [texlbl="${\bf F}_p$"];
         Fe [texlbl="${\bf F}_e$"];
         S [texlbl="${\bf S}$"];
 
         node [fixedsize=false, shape=none, width=1, style="fill=green!20"];
-        r1 [texlbl="${\bf r}_{\RNum{romanOne}}$"];
-        r2 [texlbl="${\bf r}_{\RNum{romanTwo}}$"];
+        r1 [texlbl="${\bf r}_I$"];
+        r2 [texlbl="${\bf r}_{II}$"];
         node [shape=none, style=""];
 
-        sn -> k;
         ds -> k;
         k -> H;
         H -> w;
         w -> beta;
         w -> gd;
         dgamma -> beta;
-        betan -> beta;
         beta -> gd;
         gd -> g;
         gm -> g;
-        Fpn -> Fp;
         dgamma -> Fp;
         Fp -> Fe;
         Fe -> S;
