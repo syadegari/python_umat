@@ -1,10 +1,68 @@
 __pycache__
-*fls
-*log
-*pdf
-*aux
-*dot
+.ipynb_checkpoints
+*DS_Store
 *latexmk
 *gz
-*DS_Store
-.ipynb_checkpoints
+
+# LaTeX temporary files
+# dot2tex
+*-dot2tex-*.dot
+*-dot2tex-*.tex
+#
+*.aux
+*.glo
+*.idx
+*log
+*.toc
+*.ist
+*.acn
+*.acr
+*.alg
+*.bbl
+*.blg
+*.dvi
+*.glg
+*.gls
+*.ilg
+*.ind
+*.lof
+*.lot
+*.maf
+*.mtc
+*.mtc1
+*.out
+*.synctex.gz
+*.nav
+*.snm
+*.vrb
+*.fdb_latexmk
+*.fls
+*.entoc
+*.loa
+
+# Editors/OS generated files
+*.swp
+*.bak
+*.backup
+*.sav
+*.swo
+*.tmp
+*.old
+*~
+.DS_Store
+._*
+
+# Output files
+*.pdf
+
+# Other possible unwanted files
+*.log
+*.notes
+*.spl
+
+# Folders generated during the build process
+_auto/
+
+# If you use minted package for source code highlighting
+_minted-*/
+.
