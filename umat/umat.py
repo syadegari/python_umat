@@ -3,7 +3,6 @@ import torch
 from .constants import consts
 from .trip_ferrite_data import SlipSys, ElasStif
 
-I = torch.eye(3)
 
 
 
@@ -228,15 +227,15 @@ def get_gd(beta, ws):
 
 
 def plastic_def_grad(dgamma, slip_sys, F_p0):
-    return torch.linalg.inv(
-        I - (dgamma.reshape(-1, 1, 1) * slip_sys).sum(axis=0)
-    ) @ F_p0
+    I = torch.eye(3, dtype=F_p0.dtype)
+    return torch.linalg.inv(I - (dgamma.reshape(-1, 1, 1) * slip_sys).sum(axis=0)) @ F_p0
 
 
 def get_PK2(C_e, elas_stiff):
     '''We write this function with because sum is
     faster than einsum (almost twice)
     '''
+    I = torch.eye(3, dtype=C_e.dtype)
     return (elas_stiff * (0.5 * (C_e - I)).reshape(1, 1, 3, 3)).sum(axis=(2, 3))
 
 
