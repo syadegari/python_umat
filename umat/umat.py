@@ -174,33 +174,9 @@ def get_gm(F_e1, slip_sys, elas_stiff):
     return ((C_e1 @ S).reshape(1, 3, 3) * slip_sys).sum(axis=(1, 2))
 
 
-def get_r_I(ds, H, dgamma):
-    return ds - H @ dgamma
 
 
-def get_r_II(gs_1, slip_1, dgamma, dt):
-    '''
-    gs_1 : g^{(i)}_{n+1}
-    slip_1 : s^{(i)}_{n+1}
-    dgamma : \Delta\gamma_{n+1}
-    dt : \Delta t = t_{n+1} - t_n
-    '''
     #
-    def get_indicator(x, threshold):
-        with torch.no_grad():
-            return (x > threshold).to(torch.float)
-    #
-    # first we form the vector we want to output and then
-    # zero the entries below the threshold using the get_indicator function
-    #
-    ret = dgamma - dt * consts.GammaDot0_F * ((gs_1 / slip_1) ** (1 / consts.pExp_F) - 1.0)
-    return ret * get_indicator(gs_1, slip_1)
-
-def functional():
-    return torch.norm(torch.hstack(
-        [get_r_I(), get_r_II()]
-    )) + penalty_coeff * (
-        torch.max(0, -dgamma) ** 2 + torch.max(0, slip_1 - s_inf) ** 2
     )
     
 
