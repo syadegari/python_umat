@@ -177,6 +177,7 @@ def get_params(config_path, cmdline_params):
         #
         check_params_exist(params)
         check_params_values(params)
+        check_logging_info(params)
         if rewrite_config_file:
             modified_config_file = f"{os.path.dirname(config_path)}/config_{params['experiment_name']}.yaml"
             with open(modified_config_file, "w") as f:
