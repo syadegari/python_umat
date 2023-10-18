@@ -5,31 +5,29 @@ from .trip_ferrite_data import SlipSys, ElasStif
 
 I = torch.eye(3)
 
-def sdvini(nstatv):
 
-    statev = torch.zeros(58)
-    # slip system, tag 0 = inactive, 1 = active
-    tags_gamma = torch.zeros(24, dtype=torch.int)
 
-    assert nstatv == 91 # ?? or 93
 
+
+
+
+
+def sdvini():
     # initial plastic deformation is identity
-    statev[ : 9] = torch.eye(3).reshape(-1, 1).squeeze()
+    F_p_init = torch.eye(3)
+    # initial plastic slip
+    gamma_init = torch.zeros(24)
+    #
+    #   accumulative plastic strain, slip resistance parameter, dislocation
+    #   density parameter
+    #   initial slip resistance = 0.158 for original matrix
+    #                             0.072 for soft matrix (low yield stress)
+    #                             0.216 for hard matrix (high yield stress)
+    s_init = consts.s0_F * torch.ones(24)
+    # initial dislocation density
+    beta_0 = 0.0
 
-#
-#   accumulative plastic strain, slip resistance parameter, dislocation 
-#   density parameter
-#   initial slip resistance = 0.158 for original matrix
-#                             0.072 for soft matrix (low yield stress)
-#                             0.216 for hard matrix (high yield stress)
-
-    statev[9 : 33] = 0.0   # initial plastic strain                    
-    statev[33: 57] = s0_F  # 1.58d-1 !initial slip resistance parameter
-   
-    statev[57] = 0.0     # initial dislocation density
-
-    return statev, tags_gamma
-
+    return F_p_init, gamma_init, s_init, beta_0
 
 def nonschmidstressbcc(Schmid,NonSchmid):
     '''
