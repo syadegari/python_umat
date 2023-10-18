@@ -22,9 +22,9 @@ PARAMS_SCHEMA = PARAMS_SCHEMA = {
         "type": float,
         "help": "Coefficient for the negative delta gamma penalty.",
     },
-    "coeff_penalty_positive_gamma": {
+    "coeff_penalty_negative_gamma": {
         "type": float,
-        "help": "Coefficient for the positive gamma penalty.",
+        "help": "Coefficient for the negative gamma penalty.",
     },
     "coeff_penalty_min_slipres": {
         "type": float,
