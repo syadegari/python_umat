@@ -8,13 +8,6 @@ import torch
 from dataclasses import dataclass
 
 
-@dataclass
-class LoggingFlags:
-    flag_loss: False
-    flag_loss_grad_norm: False
-    flag_params_histogram: False
-
-
 PARAMS_SCHEMA = PARAMS_SCHEMA = {
     # weights for the loss
     "coeff_loss_data": {
