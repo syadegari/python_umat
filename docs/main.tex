@@ -1,8 +1,17 @@
 \documentclass{article}
+
+\usepackage{natbib}
+\bibliographystyle{plainnat}
 \usepackage{dot2texi}
 \usepackage{tikz}
 \usepackage{amsmath, amsfonts}
 \usetikzlibrary{shapes,arrows}
+
+\newcounter{romanOne}
+\newcounter{romanTwo}
+\setcounter{romanOne}{1}
+\setcounter{romanTwo}{2}
+\newcommand{\RNum}[1]{\mathrm{{\Roman{#1}}}}
 
 %% ------------------------------------------------
 %% headers for algorithm package
@@ -114,29 +123,40 @@ As before, we have two equations of rate form and use them for temporal discriti
 \begin{equation}
     \dot{\gamma}^{(i)} =
     \begin{cases}
-        \dot{\gamma}_{F,0} \left(\left(\frac{g^{(i)}}{s^{(i)}}\right)^{\frac{1}{p_F}} - 1 \right) & g^{(i)} > s^{(i)}\\
+        \displaystyle \dot{\gamma}_{F,0} \left(\left(\frac{g^{(i)}}{s^{(i)}}\right)^{\frac{1}{p_F}} - 1 \right) & g^{(i)} > s^{(i)}\\
         0 & \text{otherwise}
     \end{cases}
 \end{equation}
 
-which lead to the following residuals
+which lead to the following discretized residuals
 
 \begin{equation}
-    r_I^{(i)} \coloneqq \Delta s^{(i)}\ - \sum_{j=1}^N H^{(i,j)} \Delta \gamma^{(j)}
+    r_{\RNum{romanOne} }^{(i)} \coloneqq \Delta s^{(i)}\ - \sum_{j=1}^N H^{(i,j)} \Delta \gamma^{(j)}
 \end{equation}
 
 
 \begin{equation}
-    r_{II}^{(i)} \coloneqq
+    \label{eq:r_II_1}
+    r_{\RNum{romanTwo}}^{(i)} \coloneqq
     \begin{cases}
-        \Delta {\gamma}^{(i)} - \Delta t \dot{\gamma}_0
+        \displaystyle \Delta {\gamma}^{(i)} - \Delta t \dot{\gamma}_0
         \left( \left( \frac{g^{(i)}}{s^{(i)}}\right)^{\frac{1}{p_F}} - 1 \right) & g^{(i)} > s^{(i)}\\
         0 & \text{otherwise}
     \end{cases}
 \end{equation}
 
+As covered extensively in \citep[pp.~95--97]{Tjahjanto2008}, (\ref{eq:r_II_1}) is not suitable for numerical computation, considering the large exponent $\frac{1}{p_F} = 50$ . 
+Instead, we invert (\ref{eq:r_II_1}) and use that for our numerical calculation:
 
-\section{Visualization of computed values}
+\begin{equation}
+    \label{eq:r_II_2}
+    r_{\RNum{romanTwo}}^{(i)} \coloneqq
+    \begin{cases}
+        \displaystyle g^{(i)} - s^{(i)} \left( \frac{\Delta \gamma^{(i)}}{\dot{\gamma}_0 \Delta t} + 1 \right) ^ {p_F} & g^{(i)} > s^{(i)}\\
+        \Delta \gamma^{(i)} & \text{otherwise}
+    \end{cases}
+\end{equation}
+
 
 \section{Visualization of computed values}
 
@@ -159,6 +179,12 @@ Not shown in this graph are all the constants factors and values from timestep $
     }
     \label{fig:compu-graph}
 \end{figure}
+
+% \begin{figure}[]
+%     \include{neuralnet.tex}
+%     \caption{Graph of forward call of computed residuals. The nodes that indicate roots are highlighted with pale blue, while green indicates the leaf of the graph.}
+%     \label{fig:compu-graph}
+% \end{figure}
 
 
 \section{Algorithm}
