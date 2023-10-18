@@ -216,13 +216,10 @@ def grain_orientation_bcc(ElasStif, SlipSys, angles):
 
 def material_properties_bcc(angles):
     return grain_orientation_bcc(ElasStif, SlipSys, angles)
-    
 
-def get_ks(delta_s, slip_0):
 
-    return consts.k0_F * (
-        1 - (slip_0 + delta_s) / consts.sInf_F
-    ) ** consts.uExp_F
+def get_ks(delta_s, slip_resist_0):
+    return consts.k0_F * (1 - (slip_resist_0 + delta_s) / consts.sInf_F) ** consts.uExp_F
 
 
 def get_H_matrix(ks):
