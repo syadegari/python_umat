@@ -19,23 +19,29 @@ coverage run -m unittest discover
 coverage report -m
 
 * List of code modification
-** Implement the inverse gamma relation, as mentioned in Denny's thesis
-** Correct get_r_II function. In case of g^{i} < s^{i}, we should have \Delta\gamma^{i} and not zero.
-** Implement barrier penalty formulation. 
-** Factor drive.py into smaller routines.
-** Run UMAT-Fortran with the same orientation as the one we use in python-umat and collect statistics
+** DONE Implement the inverse gamma relation, as mentioned in Denny's thesis.
+Implemented. Currently does not yield good results. It could easily result in nan values and currently is not used. At the moment relying on penalties and data loss to guide the search. 
+*** DONE Correct get_r_II function. In case of g^{i} < s^{i}, we should have \Delta\gamma^{i} and not zero.
+  This is already taken care of with the inclusion of inverse-gamma relation. 
+** TODO Implement barrier penalty formulation. 
+** DONE Factor drive.py into smaller routines.
+** TODO Run UMAT-Fortran with the same orientation as the one we use in python-umat and collect statistics
 *** Compare stress prior to yield from both methods
 **** Implement stress calculation (Cauchy) in python-umat.
 *** How many iterations are done in RETURNMAPPINGBCC
 *** Residual at the end of the return mapping 
 *** How many times we call slip-system-check routine
 *** Time that takes for a single run of return mapping algorithm
-** Make the code flexible enough so it runs with optimizers from optim modules, the ad-hoc optimizer, where we zero parameters (that violate constraints) after each iteration.
-** Find small numerical "constrained optimization problems" to test various optimization algorithms.
-** Write more tests
+** DONE Make the code flexible enough so it runs with optimizers from optim modules, the ad-hoc optimizer, where we zero parameters (that violate constraints) after each iteration.
+ This is not considered anymore since we have shifted to PINNs framework.
+** DONE Find small numerical "constrained optimization problems" to test various optimization algorithms.
+ This is not considered anymore since we have shifted to PINNs framework.
+** DONE Write more tests
+All the umat routine are tested and verified (constants, construction and batch computation). Additional tests are written to ensure the computation in fortran and pytorch result in the same values. 
 ** DONE Read about L1-regularization (Could it lead to sparse parameter set?)
 A very wishy-washy explanation, based on what I took from Goodfelllow's book:
  The main effect of L1-regularization is that the gradient does not scale with the value of parameters, as is the case with L2-regularization. Instead, we get unit gradients for each parameter of the optimization. This, combine with a large penalty coefficient, pushes the parameter to the boundaries (or beyond, which in that case, it is being projected back to the boundary) of the subspace that defines the permissible space for optimization. In short, there is a higher chance, although not guaranteed, that L1-regularization will lead to sparse parameter set than L2-regularization.
-** Try LBFGS 
-*** How to include constraints in the formulation of LBFGS? 
+** DONE Try LBFGS 
+ - How to include constraints in the formulation of LBFGS? This won't be needed at the moment since out focus has shifted to compute the loss using PINNs approach. As such, purely optimizing the physical loss is no longer considered. 
 
+** DONE Add frequency for logging required data into tensorboard. Make sure that frequencies are provided for each logging item.
