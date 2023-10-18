@@ -3,7 +3,7 @@ __pycache__
 *DS_Store
 *latexmk
 *gz
-
+bak
 # LaTeX temporary files
 # dot2tex
 *-dot2tex-*.dot
