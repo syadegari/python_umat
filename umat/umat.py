@@ -31,37 +31,38 @@ def sdvini():
 
 
 def non_schmid_stress_bcc(Schmid):
+    """
     computes non-Schmid stress according to Bassani's convention
-    '''
+    """
     NonSchmid = torch.zeros_like(Schmid)
     # compute the non-glide stress (non-Schmid stress)
-    NonSchmid[0]  = Schmid[5]      #      NonSchmid(1)  = NGlide*Schmid(6) 
-    NonSchmid[1]  = Schmid[2]      #      NonSchmid(2)  = NGlide*Schmid(3) 
-    NonSchmid[2]  = Schmid[1]      #      NonSchmid(3)  = NGlide*Schmid(2) 
-    NonSchmid[3]  = Schmid[4]      #      NonSchmid(4)  = NGlide*Schmid(5) 
-    NonSchmid[4]  = Schmid[3]      #      NonSchmid(5)  = NGlide*Schmid(4) 
-    NonSchmid[5]  = Schmid[0]      #      NonSchmid(6)  = NGlide*Schmid(1) 
-    #               
-    NonSchmid[6]  = Schmid[9]      #      NonSchmid(7)  = NGlide*Schmid(10)
-    NonSchmid[7]  = Schmid[10]     #      NonSchmid(8)  = NGlide*Schmid(11)
-    NonSchmid[8]  = Schmid[11]     #      NonSchmid(9)  = NGlide*Schmid(12)
-    NonSchmid[9] =  Schmid[6]      #      NonSchmid(10) = NGlide*Schmid(7) 
-    NonSchmid[10] = Schmid[7]      #      NonSchmid(11) = NGlide*Schmid(8) 
-    NonSchmid[11] = Schmid[8]      #      NonSchmid(12) = NGlide*Schmid(9) 
-    #               
-    NonSchmid[12] = Schmid[15]     #      NonSchmid(13) = NGlide*Schmid(16)
-    NonSchmid[13] = Schmid[16]     #      NonSchmid(14) = NGlide*Schmid(17)
-    NonSchmid[14] = Schmid[17]     #      NonSchmid(15) = NGlide*Schmid(18)
-    NonSchmid[15] = Schmid[12]     #      NonSchmid(16) = NGlide*Schmid(13)
-    NonSchmid[16] = Schmid[13]     #      NonSchmid(17) = NGlide*Schmid(14)
-    NonSchmid[17] = Schmid[14]     #      NonSchmid(18) = NGlide*Schmid(15)
-    #               
-    NonSchmid[18] = Schmid[23]     #      NonSchmid(19) = NGlide*Schmid(24)
-    NonSchmid[19] = Schmid[20]     #      NonSchmid(20) = NGlide*Schmid(21)
-    NonSchmid[20] = Schmid[19]     #      NonSchmid(21) = NGlide*Schmid(20)
-    NonSchmid[21] = Schmid[22]     #      NonSchmid(22) = NGlide*Schmid(23)
-    NonSchmid[22] = Schmid[21]     #      NonSchmid(23) = NGlide*Schmid(22)
-    NonSchmid[23] = Schmid[18]     #      NonSchmid(24) = NGlide*Schmid(19)
+    NonSchmid[0] = Schmid[5]  #      NonSchmid(1)  = NGlide*Schmid(6)
+    NonSchmid[1] = Schmid[2]  #      NonSchmid(2)  = NGlide*Schmid(3)
+    NonSchmid[2] = Schmid[1]  #      NonSchmid(3)  = NGlide*Schmid(2)
+    NonSchmid[3] = Schmid[4]  #      NonSchmid(4)  = NGlide*Schmid(5)
+    NonSchmid[4] = Schmid[3]  #      NonSchmid(5)  = NGlide*Schmid(4)
+    NonSchmid[5] = Schmid[0]  #      NonSchmid(6)  = NGlide*Schmid(1)
+    #
+    NonSchmid[6] = Schmid[9]  #      NonSchmid(7)  = NGlide*Schmid(10)
+    NonSchmid[7] = Schmid[10]  #      NonSchmid(8)  = NGlide*Schmid(11)
+    NonSchmid[8] = Schmid[11]  #      NonSchmid(9)  = NGlide*Schmid(12)
+    NonSchmid[9] = Schmid[6]  #      NonSchmid(10) = NGlide*Schmid(7)
+    NonSchmid[10] = Schmid[7]  #      NonSchmid(11) = NGlide*Schmid(8)
+    NonSchmid[11] = Schmid[8]  #      NonSchmid(12) = NGlide*Schmid(9)
+    #
+    NonSchmid[12] = Schmid[15]  #      NonSchmid(13) = NGlide*Schmid(16)
+    NonSchmid[13] = Schmid[16]  #      NonSchmid(14) = NGlide*Schmid(17)
+    NonSchmid[14] = Schmid[17]  #      NonSchmid(15) = NGlide*Schmid(18)
+    NonSchmid[15] = Schmid[12]  #      NonSchmid(16) = NGlide*Schmid(13)
+    NonSchmid[16] = Schmid[13]  #      NonSchmid(17) = NGlide*Schmid(14)
+    NonSchmid[17] = Schmid[14]  #      NonSchmid(18) = NGlide*Schmid(15)
+    #
+    NonSchmid[18] = Schmid[23]  #      NonSchmid(19) = NGlide*Schmid(24)
+    NonSchmid[19] = Schmid[20]  #      NonSchmid(20) = NGlide*Schmid(21)
+    NonSchmid[20] = Schmid[19]  #      NonSchmid(21) = NGlide*Schmid(20)
+    NonSchmid[21] = Schmid[22]  #      NonSchmid(22) = NGlide*Schmid(23)
+    NonSchmid[22] = Schmid[21]  #      NonSchmid(23) = NGlide*Schmid(22)
+    NonSchmid[23] = Schmid[18]  #      NonSchmid(24) = NGlide*Schmid(19)
     #
     return consts.NGlide * NonSchmid
 
