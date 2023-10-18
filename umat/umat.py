@@ -259,15 +259,10 @@ def get_PK2(C_e, elas_stiff):
     return (elas_stiff * (0.5 * (C_e - I)).reshape(1, 1, 3, 3)).sum(axis=(2, 3))
 
 
-def get_gm(F_e1, slip_sys, elas_stiff):
-    '''
-    F_e1 : F_{e, n+1}
-    '''
-    C_e1 = F_e1.T @ F_e1 # we use this twice
-    S = get_PK2(C_e1, elas_stiff)
-    return ((C_e1 @ S).reshape(1, 3, 3) * slip_sys).sum(axis=(1, 2))
-
-
+def get_gm(F_e, slip_sys, elas_stiff):
+    C_e = F_e.T @ F_e  # we use this twice
+    S = get_PK2(C_e, elas_stiff)
+    return ((C_e @ S).reshape(1, 3, 3) * slip_sys).sum(axis=(1, 2))
 
 
     #
