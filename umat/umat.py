@@ -234,7 +234,7 @@ def get_H_matrix(ks):
 
 def get_ws(H):
     N = len(H)
-    return (1. / (consts.c0_F * consts.mu_F * N)) * H.sum(axis=0)
+    return (1.0 / (consts.c0_F * consts.mu_F * N)) * H.sum(axis=0)
 
 
 def get_beta(dgamma, ws, beta_0):
