@@ -1,7 +1,7 @@
 import torch
 
 from .constants import consts
-from .trip_ferrite_data import SlipSys, ElasStif, ShearMod
+from .trip_ferrite_data import SlipSys, ElasStif
 
 I = torch.eye(3)
 
