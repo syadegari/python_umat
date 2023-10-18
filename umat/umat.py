@@ -3,12 +3,31 @@ import torch
 from .constants import consts
 from .trip_ferrite_data import SlipSys, ElasStif
 
+from typing import Union, Tuple, TypeVar
+
+# B = TypeVar("B")
+# FloatTensor = Union[torch.float32, torch.float64]
+
+# Defining Batch size as a Type Variable
+B = TypeVar("B")
 
 
+# This is a way to represent a tensor with certain shape constraints
+class FloatTensor(torch.Tensor):
+    @classmethod
+    def __class_getitem__(cls, item):
+        return cls
 
 
-
-
+# TODO: Decide what to do with these annotations
+# BTAngles = FloatTensor[Tuple[B, 3]]
+# BTElasticity = FloatTensor[Tuple[B, 3, 3, 3, 3]]
+# BTSlipSystem = FloatTensor[Tuple[B, 24, 3, 3]]
+# BTVarScalar = FloatTensor[Tuple[B]]
+# BTVarVector = FloatTensor[Tuple[B, 24]]
+# BTVarMatrix = FloatTensor[Tuple[B, 24, 24]]
+# BTVarStrain = FloatTensor[Tuple[B, 3, 3]]
+# F32orF64 = Union[torch.float32, torch.float64]
 
 
 def sdvini():
