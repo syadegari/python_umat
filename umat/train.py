@@ -92,15 +92,15 @@ def log_gradient_norm(
         {
             "data": norm_of_grad(losses.data, model, optimizer, p=2),
             "physics": norm_of_grad(losses.physics, model, optimizer, p=2),
-            "delta_gamma": norm_of_grad(losses.pnt_delta_gamma, model, optimizer, p=1),
+            "delta_gamma": norm_of_grad(losses.pnt_delta_gamma, model, optimizer, p=2),
             "negative_gamma": norm_of_grad(
-                losses.pnt_negative_gamma, model, optimizer, p=1
+                losses.pnt_negative_gamma, model, optimizer, p=2
             ),
             "min_slipres": norm_of_grad(
-                losses.pnt_min_slipresistance, model, optimizer, p=1
+                losses.pnt_min_slipresistance, model, optimizer, p=2
             ),
             "max_slipres": norm_of_grad(
-                losses.pnt_max_slipresistance, model, optimizer, p=1
+                losses.pnt_max_slipresistance, model, optimizer, p=2
             ),
         },
         idx,
