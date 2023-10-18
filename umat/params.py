@@ -131,6 +131,9 @@ class WrongValueError(Exception):
 
 
 def check_params_values(params):
+    """
+    parameters with choices should have valid subset of allowable values
+    """
     for param_name in params:
         if "choices" in PARAMS_SCHEMA[param_name]:
             if not set(params[param_name]) <= set(
@@ -149,6 +152,9 @@ def check_params_values(params):
 
 
 def check_params_exist(params):
+    """
+    All the parameters in the SCHEMA should be specified at this point.
+    """
     missing_keys = PARAMS_SCHEMA.keys() - params.keys()
     if missing_keys:
         logging.error(f"Missing keys in config: {missing_keys}")
