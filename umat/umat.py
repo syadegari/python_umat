@@ -224,10 +224,12 @@ def get_ks(delta_s, slip_resist_0):
 
 def get_H_matrix(ks):
     N = len(ks)
+    dtype = ks.dtype
     return torch.vstack(N * [ks]) * (
-        consts.q0_F * (torch.ones([N, N]) - torch.eye(N)) + torch.eye(N)
+        consts.q0_F * (torch.ones([N, N], dtype=dtype) - torch.eye(N, dtype=dtype))
+        + torch.eye(N, dtype=dtype)
     )
-    
+
 
 def get_ws(H):
     N = len(H)
