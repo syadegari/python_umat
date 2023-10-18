@@ -250,9 +250,11 @@ def plastic_def_grad(dgamma, slip_sys, F_p0):
 
 
 def get_PK2(C_e, elas_stiff):
-    '''We write this function with because sum is
-    faster than einsum (almost twice)
-    '''
+    """
+    We write this function with `sum` because sum is
+    faster than einsum (almost twice). There is a test in the test suite to ensure
+    the two operations result in the same value.
+    """
     I = torch.eye(3, dtype=C_e.dtype)
     return (elas_stiff * (0.5 * (C_e - I)).reshape(1, 1, 3, 3)).sum(axis=(2, 3))
 
