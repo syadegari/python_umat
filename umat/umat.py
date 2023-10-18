@@ -1,4 +1,6 @@
 import torch
+from torch.func import vmap
+import einops
 
 from .constants import consts
 from .trip_ferrite_data import SlipSys, ElasStif
@@ -265,7 +267,25 @@ def get_gm(F_e, slip_sys, elas_stiff):
     return ((C_e @ S).reshape(1, 3, 3) * slip_sys).sum(axis=(1, 2))
 
 
+def get_driving_force(slip_resistance0, slip_resistance1, delta_gamma, beta0, Fp0, theta, F1):
+    rm = rotation_matrix(angles=theta)
+    rotated_slip_system = rotate_slip_system(SlipSys, rm)
+    rotated_elastic_stiffness = rotate_elastic_stiffness(ElasStif, rm)
     #
+    gth = consts.g_th
+    ks = vmap(get_ks)(
+        slip_resistance1 - slip_resistance0,
+        slip_resistance0,
     )
-    
+    H = vmap(get_H_matrix)(ks)
+    ws = vmap(get_ws)(H)
+    beta = vmap(get_beta)(delta_gamma, ws, beta0)
+    gd = vmap(get_gd)(beta, ws)
+    Fp1 = vmap(plastic_def_grad)(delta_gamma, rotated_slip_system, Fp0)
+    Fe1 = F1 @ torch.linalg.inv(Fp1)
+    gm = vmap(get_gm)(Fe1, rotated_slip_system, rotated_elastic_stiffness)
+    non_schmid_stress = vmap(non_schmid_stress_bcc)(gm)
+    ### up to this point we have tested all the functions that needed vmap.
+    g = gm + gd + gth
 
+    return g, H, non_schmid_stress
