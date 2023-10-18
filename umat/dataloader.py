@@ -188,15 +188,3 @@ class BatchSampler(Sampler):
 
     def __len__(self):
         return (len(self.data_source) + self.n_batch - 1) // self.n_batch
-
-
-# Sample usage:
-# N_total = 20
-# sequence = torch.arange(N_total)  # Example sequence
-# dataset = SequenceDataset(sequence)
-# n_batch = 3
-# sampler = BatchSampler(dataset, n_batch)
-# dataloader = DataLoader(dataset, batch_sampler=sampler)
-
-# for batch in dataloader:
-#     print(batch)
