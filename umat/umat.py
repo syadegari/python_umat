@@ -66,40 +66,56 @@ def non_schmid_stress_bcc(Schmid):
     #
     return consts.NGlide * NonSchmid
 
-    
-def rotation_matrix(angle1, angle2, angle3):
-    '''defines the rotation matrix using 323 euler rotations'''
-    # rotation matrix of the first rotation (angle1)
-    angle1 = torch.tensor(angle1)
-    angle2 = torch.tensor(angle2)
-    angle3 = torch.tensor(angle3)
 
-    R1 = torch.zeros([3, 3])
-    R1[0, 0] =  torch.cos(angle1)
-    R1[0, 1] =  torch.sin(angle1)
-    R1[1, 0] = -torch.sin(angle1)
-    R1[1, 1] =  torch.cos(angle1)
-    R1[2, 2] =  1.0
-    #
+def rotation_matrix(
+    angles: Union[FloatTensor[3], FloatTensor[B, 3]]
+) -> Union[FloatTensor[3, 3], FloatTensor[B, 3, 3]]:
+    """
+    Defines the rotation matrix using 323 euler rotations.
+    This is the replica of the Fortran-version. It has been
+    modified to be batch-compatible.
+    """
+
+    was_singleton = False
+    if angles.ndim == 1:
+        angles = angles.unsqueeze(0)
+        was_singleton = True
+
+    batch_size = angles.shape[0]
+
+    angle1, angle2, angle3 = angles[:, 0], angles[:, 1], angles[:, 2]
+
+    R1 = torch.zeros([batch_size, 3, 3]).to(angles.dtype)
+    R2 = torch.zeros([batch_size, 3, 3]).to(angles.dtype)
+    R3 = torch.zeros([batch_size, 3, 3]).to(angles.dtype)
+
+    #  rotation matrix of the second rotation (angle1)
+    R1[:, 0, 0] = torch.cos(angle1)
+    R1[:, 0, 1] = torch.sin(angle1)
+    R1[:, 1, 0] = -torch.sin(angle1)
+    R1[:, 1, 1] = torch.cos(angle1)
+    R1[:, 2, 2] = 1.0
+
     #  rotation matrix of the second rotation (angle2)
-    R2 = torch.zeros([3, 3])
-    R2[0, 0] =  torch.cos(angle2)
-    R2[0, 2] = -torch.sin(angle2)
-    R2[1, 1] =  1.0
-    R2[2, 0] =  torch.sin(angle2)
-    R2[2, 2] =  torch.cos(angle2)
-    #
-    #  rotation matrix of the third rotation (angle3)
-    R3 = torch.zeros([3, 3])
-    R3[0, 0] =  torch.cos(angle3)
-    R3[0, 1] =  torch.sin(angle3)
-    R3[1, 0] = -torch.sin(angle3)
-    R3[1, 1] =  torch.cos(angle3)
-    R3[2, 2] =  1.0
+    R2[:, 0, 0] = torch.cos(angle2)
+    R2[:, 0, 2] = -torch.sin(angle2)
+    R2[:, 1, 1] = 1.0
+    R2[:, 2, 0] = torch.sin(angle2)
+    R2[:, 2, 2] = torch.cos(angle2)
 
-#
-#  calculate the overall rotation matrix
+    #  rotation matrix of the third rotation (angle3)
+    R3[:, 0, 0] = torch.cos(angle3)
+    R3[:, 0, 1] = torch.sin(angle3)
+    R3[:, 1, 0] = -torch.sin(angle3)
+    R3[:, 1, 1] = torch.cos(angle3)
+    R3[:, 2, 2] = 1.0
+
+    #  calculate the overall rotation matrix
     RM = R3 @ R2 @ R1
+
+    if was_singleton:
+        RM = RM.squeeze(0)
+
     return RM
 
 
