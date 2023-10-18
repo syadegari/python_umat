@@ -52,10 +52,7 @@ PARAMS_SCHEMA = PARAMS_SCHEMA = {
     "log_frequencies": {
         "type": int,
         "nargs": "*",
-        "help": (
-            "List of frequencies corresponding to each log specified in"
-            " 'log_flags'."
-        ),
+        "help": "List of frequencies corresponding to each log specified in 'log_flags'.",
     },
     "tboard_path": {"type": str, "help": "Path for saving TensorBoard logs."},
     "sims_path": {"type": str, "help": "Path to the simulations."},
@@ -102,9 +99,7 @@ for key, value in PARAMS_SCHEMA.items():
         value["metavar"] = TYPE_COLOR_MAPPING.get(value["type"], value["type"])
 
 
-class HelpFormatter(
-    argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTypeHelpFormatter
-):
+class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTypeHelpFormatter):
     def __init__(
         self,
         prog: str,
@@ -179,7 +174,9 @@ def get_params(config_path, cmdline_params):
         check_params_values(params)
         check_logging_info(params)
         if rewrite_config_file:
-            modified_config_file = f"{os.path.dirname(config_path)}/config_{params['experiment_name']}.yaml"
+            modified_config_file = (
+                f"{os.path.dirname(config_path)}/config_{params['experiment_name']}.yaml"
+            )
             with open(modified_config_file, "w") as f:
                 f.writelines(yaml.dump(params))
         if params["generate_config"]:

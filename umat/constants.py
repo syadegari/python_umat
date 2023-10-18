@@ -16,9 +16,9 @@ class FerriticPhaseConstants:
     mu_F: float = 55.0e0  # shear modulus GPa
 
     # Hardening parameteres for ferrite
-    s0_F: float = 1.58e-1     # GPa     #1.58d-4   (N/um^2)
-    sInf_F: float = 4.12e-1   # GPa     #4.12d-4   (N/um^2)
-    k0_F: float = 1.9e0       # GPa     #1.9d-3    (N/um^2)
+    s0_F: float = 1.58e-1     # GPa   #1.58d-4   (N/um^2)
+    sInf_F: float = 4.12e-1   # GPa   #4.12d-4   (N/um^2)
+    k0_F: float = 1.9e0       # GPa   #1.9d-3    (N/um^2)
     uExp_F: float = 2.8e0
     q0_F: float = 1.0e0
     c0_F: float = 5.0e-1

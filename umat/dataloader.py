@@ -136,9 +136,7 @@ def make_batch(ns: list, sims, ts, N: int):
     betas = []
 
     for n in ns:
-        F0, F1, theta, gamma0, gamma1, slip0, slip1, Fp0, beta0 = get_data(
-            sims, ts, n, N
-        )
+        F0, F1, theta, gamma0, gamma1, slip0, slip1, Fp0, beta0 = get_data(sims, ts, n, N)
         F0s.append(F0.reshape(-1))
         F1s.append(F1.reshape(-1))
         thetas.append(theta)

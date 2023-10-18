@@ -146,16 +146,10 @@ class TestMechanicalDrivingForce(unittest.TestCase):
             self.elastic_stiffness,
             0.5 * (Ce - self.I),
         )
-        mech_driving_force_expected = torch.einsum(
-            "ij, bij -> b", Ce @ S, self.slip_systems
-        )
-        mech_driving_force = umat.get_gm(
-            self.Fe, self.slip_systems, self.elastic_stiffness
-        )
+        mech_driving_force_expected = torch.einsum("ij, bij -> b", Ce @ S, self.slip_systems)
+        mech_driving_force = umat.get_gm(self.Fe, self.slip_systems, self.elastic_stiffness)
 
-        torch.testing.assert_close(
-            mech_driving_force, mech_driving_force_expected
-        )
+        torch.testing.assert_close(mech_driving_force, mech_driving_force_expected)
 
     def test_mechanical_driving_force_batch(self):
         Fe = torch.rand(2, 3, 3)
@@ -449,9 +443,7 @@ class TestSlipHardeningModulus(BaseTest):
 
     def test_sinf_slip_resistance(self):
         """If slip resistance is s_inf then ks should be zero: [0, ..., 0]"""
-        ks = umat.get_ks(
-            delta_s=torch.zeros(24), slip_resist_0=self.s_Finf * torch.ones(24)
-        )
+        ks = umat.get_ks(delta_s=torch.zeros(24), slip_resist_0=self.s_Finf * torch.ones(24))
         ks_expected = torch.zeros(24)
         torch.testing.assert_close(ks, ks_expected)
 
@@ -488,9 +480,7 @@ class TestRotateSlipSystem(unittest.TestCase):
         res1 = umat.rotate_slip_system(SlipSys, rotation_matrix1)
         res2 = umat.rotate_slip_system(SlipSys, rotation_matrix2)
 
-        torch.testing.assert_close(
-            res, rearrange([res1, res2], "b ... -> b ...")
-        )
+        torch.testing.assert_close(res, rearrange([res1, res2], "b ... -> b ..."))
 
 
 class TestRotateElasticStiffness(unittest.TestCase):
@@ -502,9 +492,7 @@ class TestRotateElasticStiffness(unittest.TestCase):
         res1 = umat.rotate_elastic_stiffness(ElasStif, rotation_matrix1)
         res2 = umat.rotate_elastic_stiffness(ElasStif, rotation_matrix2)
 
-        torch.testing.assert_close(
-            res, rearrange([res1, res2], "b ... -> b ...")
-        )
+        torch.testing.assert_close(res, rearrange([res1, res2], "b ... -> b ..."))
 
 
 class TestMisc(unittest.TestCase):
