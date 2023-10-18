@@ -1,6 +1,7 @@
 import os
 import argparse
 from umat.params import PARAMS_SCHEMA, HelpFormatter, get_params
+from umat.train import train
 
 
 def parse_arguments():
@@ -18,4 +19,4 @@ if __name__ == "__main__":
     #
     args = parse_arguments()
     params = get_params(os.path.abspath(args.config_file), vars(args))
-    print(params)
+    train(params)
