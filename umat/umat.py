@@ -119,24 +119,84 @@ def rotation_matrix(
     return RM
 
 
+def rotate_slip_system(
+    slip_sys: FloatTensor[3, 3, 3],
+    rotation_matrix: Union[FloatTensor[3, 3], FloatTensor[B, 3, 3]],
+) -> Union[FloatTensor[3, 3, 3], FloatTensor[B, 3, 3, 3]]:
+    if rotation_matrix.ndim == 2:
+        return torch.einsum(
+            "kab, ia, jb -> kij",
+            slip_sys.to(rotation_matrix.dtype),
+            rotation_matrix,
+            rotation_matrix,
+        )
+    elif rotation_matrix.ndim == 3:
+        batch_dim = rotation_matrix.shape[0]
+        return torch.einsum(
+            "Bkab, Bia, Bjb -> Bkij",
+            einops.repeat(
+                slip_sys.to(rotation_matrix.dtype),
+                "... -> b ...",
+                b=batch_dim,
+            ),
+            rotation_matrix,
+            rotation_matrix,
+        )
+    else:
+        raise ValueError(
+            "Expected input tensor 'rotation_matrix' of rank 2 or 3, but got"
+            f" rank {rotation_matrix.ndim}."
+        )
+
+
+def rotate_elastic_stiffness(
+    elastic_stiffness: FloatTensor[3, 3, 3, 3],
+    rotation_matrix: Union[FloatTensor[3, 3], FloatTensor[B, 3, 3]],
+) -> Union[FloatTensor[3, 3, 3, 3], FloatTensor[B, 3, 3, 3, 3]]:
+    if rotation_matrix.ndim == 2:
+        return torch.einsum(
+            "abcd, ia, jb, kc, ld -> ijkl",
+            elastic_stiffness.to(rotation_matrix.dtype),
+            rotation_matrix,
+            rotation_matrix,
+            rotation_matrix,
+            rotation_matrix,
+        )
+    elif rotation_matrix.ndim == 3:
+        batch_dim = rotation_matrix.shape[0]
+        return torch.einsum(
+            "Babcd, Bia, Bjb, Bkc, Bld -> Bijkl",
+            einops.repeat(
+                elastic_stiffness.to(rotation_matrix.dtype),
+                "... -> b ...",
+                b=batch_dim,
+            ),
+            rotation_matrix,
+            rotation_matrix,
+            rotation_matrix,
+            rotation_matrix,
+        )
+    else:
+        raise ValueError(
+            "Expected input tensor 'rotation_matrix' of rank 2 or 3, but got"
+            f" rank {rotation_matrix.ndim}."
+        )
+
+
 def grain_orientation_bcc(ElasStif, SlipSys, angles):
-    '''rotates the stiffness and slip systems with the calculated rotation matrix'''
-    rm = rotation_matrix(*angles)
+    """rotates the stiffness and slip systems with the calculated rotation matrix"""
+    rm = rotation_matrix(angles)
     #
-    rotated_slip_system = torch.einsum(
-        'kab,ia,jb->kij',
-        SlipSys, rm, rm
-    )
+    rotated_slip_system = torch.einsum("kab,ia,jb->kij", SlipSys.to(rm.dtype), rm, rm)
     #
     rotated_elas_stiffness = torch.einsum(
-        'abcd,ia,jb,kc,ld->ijkl',
-        ElasStif, rm, rm, rm, rm
+        "abcd,ia,jb,kc,ld->ijkl", ElasStif.to(rm.dtype), rm, rm, rm, rm
     )
     #
     return rotated_slip_system, rotated_elas_stiffness
 
 
-def material_properties_bcc(ElasStif, SlipSys, angles):
+def material_properties_bcc(angles):
     return grain_orientation_bcc(ElasStif, SlipSys, angles)
     
 
