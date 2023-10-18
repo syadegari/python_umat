@@ -20,7 +20,7 @@ PARAMS_SCHEMA = PARAMS_SCHEMA = {
     },
     "coeff_penalty_delta_gamma": {
         "type": float,
-        "help": "Coefficient for the delta gamma penalty.",
+        "help": "Coefficient for the negative delta gamma penalty.",
     },
     "coeff_penalty_positive_gamma": {
         "type": float,
@@ -28,11 +28,11 @@ PARAMS_SCHEMA = PARAMS_SCHEMA = {
     },
     "coeff_penalty_min_slipres": {
         "type": float,
-        "help": "Coefficient for the minimum slip resistance penalty.",
+        "help": "Penalty coefficient for violating the minimum slip resistance.",
     },
     "coeff_penalty_max_slipres": {
         "type": float,
-        "help": "Coefficient for the maximum slip resistance penalty.",
+        "help": "Penalty coefficient for violating the maximum slip resistance.",
     },
     # norm of penalty error
     "penalty_pnorm": {
