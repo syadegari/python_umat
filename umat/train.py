@@ -93,9 +93,15 @@ def log_gradient_norm(
             "data": norm_of_grad(losses.data, model, optimizer, p=2),
             "physics": norm_of_grad(losses.physics, model, optimizer, p=2),
             "delta_gamma": norm_of_grad(losses.pnt_delta_gamma, model, optimizer, p=1),
-            "negative_gamma": norm_of_grad(losses.pnt_negative_gamma, model, optimizer, p=1),
-            "min_slipres": norm_of_grad(losses.pnt_min_slipresistance, model, optimizer, p=1),
-            "max_slipres": norm_of_grad(losses.pnt_max_slipresistance, model, optimizer, p=1),
+            "negative_gamma": norm_of_grad(
+                losses.pnt_negative_gamma, model, optimizer, p=1
+            ),
+            "min_slipres": norm_of_grad(
+                losses.pnt_min_slipresistance, model, optimizer, p=1
+            ),
+            "max_slipres": norm_of_grad(
+                losses.pnt_max_slipresistance, model, optimizer, p=1
+            ),
         },
         idx,
     )
@@ -121,7 +127,8 @@ def get_rI(s0, s1, gamma0, gamma1, H_matrix):
 def get_rII(g1, s1, non_schmid_stress, gamma0, gamma1, gamma_dot_0, dt, pF):
     return torch.where(
         g1 > s1,
-        g1 - (s1 - non_schmid_stress) * ((gamma1 - gamma0) / (gamma_dot_0 * dt) + 1) ** pF,
+        g1
+        - (s1 - non_schmid_stress) * ((gamma1 - gamma0) / (gamma_dot_0 * dt) + 1) ** pF,
         gamma1 - gamma0,
     )
 
@@ -183,7 +190,9 @@ def train(params):
                 theta=vals0.theta,
                 F1=vals0.F1.reshape(-1, 3, 3),
             )
-            r_I = vmap(get_rI)(vals0.slip_res, slipres1_hat, vals0.gamma, gamma1_hat, H_matrix)
+            r_I = vmap(get_rI)(
+                vals0.slip_res, slipres1_hat, vals0.gamma, gamma1_hat, H_matrix
+            )
             r_II = vmap(get_rII)(
                 g1,
                 slipres1_hat,
@@ -225,8 +234,12 @@ def train(params):
                     physics=physics_loss,
                     pnt_delta_gamma=penalty_delta_gamma.norm(p=1, dim=1).mean(),
                     pnt_negative_gamma=penalty_negative_gamma.norm(p=1, dim=1).mean(),
-                    pnt_min_slipresistance=penalty_min_slipresistance.norm(p=1, dim=1).mean(),
-                    pnt_max_slipresistance=penalty_max_slipresistance.norm(p=1, dim=1).mean(),
+                    pnt_min_slipresistance=penalty_min_slipresistance.norm(
+                        p=1, dim=1
+                    ).mean(),
+                    pnt_max_slipresistance=penalty_max_slipresistance.norm(
+                        p=1, dim=1
+                    ).mean(),
                 ),
             )
             if torch.isnan(physics_loss):

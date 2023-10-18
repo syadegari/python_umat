@@ -221,7 +221,9 @@ def material_properties_bcc(angles):
 
 
 def get_ks(delta_s, slip_resist_0):
-    return consts.k0_F * (1 - (slip_resist_0 + delta_s) / consts.sInf_F) ** consts.uExp_F
+    return (
+        consts.k0_F * (1 - (slip_resist_0 + delta_s) / consts.sInf_F) ** consts.uExp_F
+    )
 
 
 def get_H_matrix(ks):
@@ -248,7 +250,9 @@ def get_gd(beta, ws):
 
 def plastic_def_grad(dgamma, slip_sys, F_p0):
     I = torch.eye(3, dtype=F_p0.dtype)
-    return torch.linalg.inv(I - (dgamma.reshape(-1, 1, 1) * slip_sys).sum(axis=0)) @ F_p0
+    return (
+        torch.linalg.inv(I - (dgamma.reshape(-1, 1, 1) * slip_sys).sum(axis=0)) @ F_p0
+    )
 
 
 def get_PK2(C_e, elas_stiff):
@@ -267,7 +271,9 @@ def get_gm(F_e, slip_sys, elas_stiff):
     return ((C_e @ S).reshape(1, 3, 3) * slip_sys).sum(axis=(1, 2))
 
 
-def get_driving_force(slip_resistance0, slip_resistance1, delta_gamma, beta0, Fp0, theta, F1):
+def get_driving_force(
+    slip_resistance0, slip_resistance1, delta_gamma, beta0, Fp0, theta, F1
+):
     rm = rotation_matrix(angles=theta)
     rotated_slip_system = rotate_slip_system(SlipSys, rm)
     rotated_elastic_stiffness = rotate_elastic_stiffness(ElasStif, rm)

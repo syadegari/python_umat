@@ -9,7 +9,9 @@ def parse_arguments():
         description="Command line arguments from schema",
         formatter_class=HelpFormatter,
     )
-    parser.add_argument("-c", "--config-file", type=str, help="Config file, including the path")
+    parser.add_argument(
+        "-c", "--config-file", type=str, help="Config file, including the path"
+    )
     for key, value in PARAMS_SCHEMA.items():
         parser.add_argument(f"--{key}", **value)
     return parser.parse_args()

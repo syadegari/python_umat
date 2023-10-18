@@ -24,7 +24,9 @@ class TestRunner(unittest.TextTestRunner):
 
 if __name__ == "__main__":
     # Discover all tests
-    test_suite = unittest.defaultTestLoader.discover(start_dir="tests", pattern="test_*.py")
+    test_suite = unittest.defaultTestLoader.discover(
+        start_dir="tests", pattern="test_*.py"
+    )
 
     # Run the tests using the custom test runner
     runner = TestRunner(verbosity=2)
