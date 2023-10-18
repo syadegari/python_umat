@@ -29,8 +29,8 @@ def sdvini():
 
     return F_p_init, gamma_init, s_init, beta_0
 
-def nonschmidstressbcc(Schmid,NonSchmid):
-    '''
+
+def non_schmid_stress_bcc(Schmid):
     computes non-Schmid stress according to Bassani's convention
     '''
     NonSchmid = torch.zeros_like(Schmid)
