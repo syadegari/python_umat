@@ -27,10 +27,10 @@ def get_rI(s0, s1, gamma0, gamma1, H_matrix):
     return (s1 - s0) - H_matrix @ (gamma1 - gamma0)
 
 
-def get_rII(g1, s1, gamma0, gamma1, gamma_dot_0, dt, pF):
+def get_rII(g1, s1, non_schmid_stress, gamma0, gamma1, gamma_dot_0, dt, pF):
     return torch.where(
         g1 > s1,
-        g1 - s1 * ((gamma1 - gamma0) / (gamma_dot_0 * dt) + 1) ** pF,
+        g1 - (s1 - non_schmid_stress) * ((gamma1 - gamma0) / (gamma_dot_0 * dt) + 1) ** pF,
         gamma1 - gamma0,
     )
 
