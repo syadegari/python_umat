@@ -136,19 +136,9 @@ def check_params_values(params):
     """
     for param_name in params:
         if "choices" in PARAMS_SCHEMA[param_name]:
-            if not set(params[param_name]) <= set(
-                PARAMS_SCHEMA[param_name]["choices"]
-            ):
-                # if not params[param_name] in PARAMS_SCHEMA[param_name]["choices"]:
+            if not set(params[param_name]) <= set(PARAMS_SCHEMA[param_name]["choices"]):
                 logging.error(f"Wrong value for {param_name}")
-                # import pdb
-
-                # pdb.set_trace()
-                raise WrongValueError(
-                    f"Wrong value for {param_name}: {params[param_name]}"
-                )
-    else:
-        return
+                raise WrongValueError(f"Wrong value for {param_name}: {params[param_name]}")
 
 
 def check_params_exist(params):
