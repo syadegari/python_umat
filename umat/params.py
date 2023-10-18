@@ -157,7 +157,22 @@ def check_params_exist(params):
         return
 
 
+def check_logging_info(params):
+    """
+    Since for the logging we specify logging type and logging frequency,
+    we check that all the specified loggings have frequency
+    """
+    assert len(params["log_flags"]) == len(
+        params["log_frequencies"]
+    ), "the length of items in log_flags and log_frequencies should be equal"
+
+
 def get_params(config_path, cmdline_params):
+    """
+    - Read the parameters from the cmdline.
+    - Read parameters from the config file.
+    - Overwrite the parameters from the cmdline to the config file.
+    """
     # remove None values from cmdline arguments
     cmdline_params = {k: v for k, v in cmdline_params.items() if v is not None}
     rewrite_config_file = False
