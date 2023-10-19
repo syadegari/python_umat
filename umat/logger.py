@@ -71,7 +71,7 @@ def clone_grads(loss, model, optimizer: optim.Optimizer):
 
 
 def norm_of_ts(ts, p):
-    return sum([t.norm(p=p).item() ** 2 for t in ts]) ** 0.5
+    return torch.concat([t.reshape(-1) for t in ts]).norm(p)
 
 
 def norm_of_grad(loss, model, optimizer, p):
