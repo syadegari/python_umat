@@ -8,7 +8,7 @@ import torch
 from dataclasses import dataclass
 
 
-PARAMS_SCHEMA = PARAMS_SCHEMA = {
+PARAMS_SCHEMA = {
     # weights for the loss
     "coeff_loss_data": {
         "type": float,
@@ -42,11 +42,11 @@ PARAMS_SCHEMA = PARAMS_SCHEMA = {
     # logging
     "log_flags": {
         "type": str,
-        "choices": ["loss", "loss_grad_norm", "params_histogram"],
+        "choices": ["loss", "loss_grad_norm", "log_grad_max", "params_histogram"],
         "nargs": "*",
         "help": (
             "List of logs to be captured. Choose from 'loss', 'loss_grad_norm',"
-            " or 'params_histogram'."
+            " 'log_grad_max' or 'params_histogram'."
         ),
     },
     "log_frequencies": {

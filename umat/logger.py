@@ -7,8 +7,11 @@ from torch.utils.tensorboard import SummaryWriter
 
 @dataclass
 class LogFlags:
+    """Fields here correspond (1-to-1) to values in `log_flags` in `PARAMS_SCHEMA`"""
+
     loss: bool = False
     loss_grad_norm: bool = False
+    loss_grad_max: bool = False
     params_histogram: bool = False
 
 
@@ -74,6 +77,37 @@ def norm_of_grad(loss, model, optimizer, p):
     return norm_of_ts(clone_grads(loss, model, optimizer), p)
 
 
+def _log_gradient_norm(
+    writer: SummaryWriter,
+    model: nn.Module,
+    optimizer: optim.Optimizer,
+    idx: int,
+    losses: Losses,
+    groupname: str,
+    pnorm: int,
+):
+    writer.add_scalars(
+        groupname,
+        {
+            "data": norm_of_grad(losses.data, model, optimizer, p=pnorm),
+            "physics": norm_of_grad(losses.physics, model, optimizer, p=pnorm),
+            "delta_gamma": norm_of_grad(
+                losses.pnt_delta_gamma, model, optimizer, p=pnorm
+            ),
+            "negative_gamma": norm_of_grad(
+                losses.pnt_negative_gamma, model, optimizer, p=pnorm
+            ),
+            "min_slipres": norm_of_grad(
+                losses.pnt_min_slipresistance, model, optimizer, p=pnorm
+            ),
+            "max_slipres": norm_of_grad(
+                losses.pnt_max_slipresistance, model, optimizer, p=pnorm
+            ),
+        },
+        idx,
+    )
+
+
 def log_gradient_norm(
     writer: SummaryWriter,
     model: nn.Module,
@@ -81,23 +115,19 @@ def log_gradient_norm(
     idx: int,
     losses: Losses,
 ):
-    writer.add_scalars(
-        "GradNorm",
-        {
-            "data": norm_of_grad(losses.data, model, optimizer, p=2),
-            "physics": norm_of_grad(losses.physics, model, optimizer, p=2),
-            "delta_gamma": norm_of_grad(losses.pnt_delta_gamma, model, optimizer, p=2),
-            "negative_gamma": norm_of_grad(
-                losses.pnt_negative_gamma, model, optimizer, p=2
-            ),
-            "min_slipres": norm_of_grad(
-                losses.pnt_min_slipresistance, model, optimizer, p=2
-            ),
-            "max_slipres": norm_of_grad(
-                losses.pnt_max_slipresistance, model, optimizer, p=2
-            ),
-        },
-        idx,
+    _log_gradient_norm(writer, model, optimizer, idx, losses, "GradNorm", pnorm=2)
+
+
+def log_gradient_max(
+    writer: SummaryWriter,
+    model: nn.Module,
+    optimizer: optim.Optimizer,
+    idx: int,
+    losses: Losses,
+    pnorm: int,
+):
+    _log_gradient_norm(
+        writer, model, optimizer, idx, losses, "GradMax", pnorm=torch.inf
     )
 
 
