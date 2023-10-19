@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import os
 import pickle
 import numpy as np
 import torch
@@ -158,6 +159,10 @@ def train(params):
 
             idx += 1
     writer.close()
+    torch.save(
+        model.state_dict(),
+        f'{os.path.dirname(params["config"])}/{params["experiment_name"]}.pth',
+    )
 
 
 if __name__ == "__main__":
