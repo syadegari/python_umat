@@ -161,7 +161,7 @@ def train(params):
     writer.close()
     torch.save(
         model.state_dict(),
-        f'{os.path.dirname(params["config"])}/{params["experiment_name"]}.pth',
+        f'{params["config_file_path"]}/{params["experiment_name"]}.pth',
     )
 
 

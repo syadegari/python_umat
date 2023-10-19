@@ -21,4 +21,5 @@ if __name__ == "__main__":
     #
     args = parse_arguments()
     params = get_params(os.path.abspath(args.config_file), vars(args))
+    params["config_file_path"] = os.path.dirname(os.path.abspath(args.config_file))
     train(params)
