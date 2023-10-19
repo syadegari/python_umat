@@ -121,7 +121,6 @@ def train(params):
                 slipres1_hat >= consts.s0_F, 0.0, consts.s0_F - slipres1_hat
             )
 
-            optimizer.zero_grad()
             log_errors(
                 writer,
                 model,
@@ -153,6 +152,7 @@ def train(params):
                 + penalty_coeff_max_slipres * penalty_max_slipresistance.norm(p=pnorm)
             )
 
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
