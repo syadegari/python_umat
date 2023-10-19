@@ -8,116 +8,11 @@ import torch.nn.functional as F
 from torch.func import vmap
 from torch.utils.tensorboard import SummaryWriter
 
-
 from .model import Model
 from .umat import get_driving_force
 from .constants import consts
 from .dataloader import DataLoader, BatchSampler, SequenceDataset, make_batch
-
-
-def clone_grads(loss, model, optimizer: optim.Optimizer):
-    optimizer.zero_grad()
-    loss.backward(retain_graph=True)
-    return [p.grad.clone() for p in model.parameters()]
-
-
-def norm_of_ts(ts, p):
-    return sum([t.norm(p=p).item() ** 2 for t in ts]) ** 0.5
-
-
-def norm_of_grad(loss, model, optimizer, p):
-    return norm_of_ts(clone_grads(loss, model, optimizer), p)
-
-
-@dataclass
-class LogFlags:
-    loss: bool = False
-    loss_grad_norm: bool = False
-    params_histogram: bool = False
-
-
-class Logger:
-    def __init__(self, log_flags: LogFlags, log_frequencies: dict):
-        self.log_flags = log_flags
-        self.log_frequencies = log_frequencies
-        self._counters = {"loss": 0, "loss_grad_norm": 0, "params_histogram": 0}
-
-    def should_log(self, key: str) -> bool:
-        if getattr(self.log_flags, key):
-            if self._counters[key] % self.log_frequencies[key] == 0:
-                self._counters[key] += 1
-                return True
-            self._counters[key] += 1
-        return False
-
-
-@dataclass
-class Losses:
-    '''Fields with `pnt_` prefix stand for "penalty"'''
-
-    data: torch.Tensor
-    physics: torch.Tensor
-    pnt_delta_gamma: torch.Tensor
-    pnt_negative_gamma: torch.Tensor
-    pnt_min_slipresistance: torch.Tensor
-    pnt_max_slipresistance: torch.Tensor
-
-
-def log_losses(writer: SummaryWriter, idx: int, losses: Losses):
-    detach = lambda x: x.detach().item()
-
-    writer.add_scalars(
-        "Loss",
-        {
-            "data": detach(losses.data),
-            "physics": detach(losses.physics),
-            "penalty_delta_gamma": detach(losses.pnt_delta_gamma),
-            "penalty_negative_gamma": detach(losses.pnt_negative_gamma),
-            "penalty_min_slipresistance": detach(losses.pnt_min_slipresistance),
-            "penalty_max_slipresistance": detach(losses.pnt_max_slipresistance),
-        },
-        idx,
-    )
-
-
-def log_gradient_norm(
-    writer: SummaryWriter,
-    model: nn.Module,
-    optimizer: optim.Optimizer,
-    idx: int,
-    losses: Losses,
-):
-    writer.add_scalars(
-        "GradNorm",
-        {
-            "data": norm_of_grad(losses.data, model, optimizer, p=2),
-            "physics": norm_of_grad(losses.physics, model, optimizer, p=2),
-            "delta_gamma": norm_of_grad(losses.pnt_delta_gamma, model, optimizer, p=2),
-            "negative_gamma": norm_of_grad(
-                losses.pnt_negative_gamma, model, optimizer, p=2
-            ),
-            "min_slipres": norm_of_grad(
-                losses.pnt_min_slipresistance, model, optimizer, p=2
-            ),
-            "max_slipres": norm_of_grad(
-                losses.pnt_max_slipresistance, model, optimizer, p=2
-            ),
-        },
-        idx,
-    )
-
-
-def log_errors(
-    writer: SummaryWriter,
-    model: nn.Module,
-    optimizer: optim.Optimizer,
-    idx: int,
-    losses: Losses,
-):
-    log_losses(writer, idx, losses)
-    log_gradient_norm(writer, model, optimizer, idx, losses)
-    # for name, param in model.named_parameters():
-    #     writer.add_histogram(name + "/grad", param.grad.data, idx)
+from .logger import Logger, log_errors, Losses
 
 
 def get_rI(s0, s1, gamma0, gamma1, H_matrix):
@@ -139,6 +34,9 @@ def train(params):
 
     writer = SummaryWriter(params["tboard_path"])
 
+    logger = Logger(
+        log_flags=params["log_flags"], log_frequencies=params["log_frequencies"]
+    )
     n_steps_per_sim = sims[0]["stress"].shape[0] - 1
     n_sims = len(sims)
     n_batch = params["n_batch"]
@@ -241,6 +139,7 @@ def train(params):
                         p=1, dim=1
                     ).mean(),
                 ),
+                logger=logger,
             )
             if torch.isnan(physics_loss):
                 physics_loss = torch.tensor([0.0], dtype=torch.float64)
