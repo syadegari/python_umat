@@ -147,8 +147,8 @@ def train(params):
     n_total = n_sims * n_steps_per_sim
     n_epoch = params["n_epoch"]
 
-    alpha_data = params["coeff_loss_data"]
-    alpha_physics = params["coeff_loss_physics"]
+    coeff_data = params["coeff_loss_data"]
+    coeff_physics = params["coeff_loss_physics"]
     penalty_coeff_delta_gamma = params["coeff_penalty_delta_gamma"]
     penalty_coeff_negative_gamma = params["coeff_penalty_negative_gamma"]
     penalty_coeff_min_slipres = params["coeff_penalty_min_slipres"]
@@ -246,8 +246,8 @@ def train(params):
                 physics_loss = torch.tensor([0.0], dtype=torch.float64)
 
             loss = (
-                alpha_data * data_loss
-                + alpha_physics * physics_loss
+                coeff_data * data_loss
+                + coeff_physics * physics_loss
                 + penalty_coeff_delta_gamma * penalty_delta_gamma.norm(p=pnorm)
                 + penalty_coeff_negative_gamma * penalty_negative_gamma.norm(p=pnorm)
                 + penalty_coeff_min_slipres * penalty_min_slipresistance.norm(p=pnorm)
