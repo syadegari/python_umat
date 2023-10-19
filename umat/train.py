@@ -108,7 +108,7 @@ def train(params):
                 slipres1_hat, vals1.slip_res
             )
             penalty_delta_gamma = torch.where(
-                gamma1_hat >= vals0.gamma, 0.0, gamma1_hat - vals0.gamma
+                gamma1_hat >= vals0.gamma, 0.0, vals0.gamma - gamma1_hat
             )
 
             penalty_negative_gamma = torch.where(gamma1_hat > 0, 0.0, -gamma1_hat)
