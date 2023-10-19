@@ -10,8 +10,9 @@ class LogFlags:
     """Fields here correspond (1-to-1) to values in `log_flags` in `PARAMS_SCHEMA`"""
 
     loss: bool = False
-    loss_grad_norm: bool = False
-    loss_grad_max: bool = False
+    grad_norm1: bool = False
+    grad_norm2: bool = False
+    grad_norm_max: bool = False
     params_histogram: bool = False
 
 
@@ -108,14 +109,24 @@ def _log_gradient_norm(
     )
 
 
-def log_gradient_norm(
+def log_gradient_norm2(
     writer: SummaryWriter,
     model: nn.Module,
     optimizer: optim.Optimizer,
     idx: int,
     losses: Losses,
 ):
-    _log_gradient_norm(writer, model, optimizer, idx, losses, "GradNorm", pnorm=2)
+    _log_gradient_norm(writer, model, optimizer, idx, losses, "GradNorm2", pnorm=2)
+
+
+def log_gradient_norm1(
+    writer: SummaryWriter,
+    model: nn.Module,
+    optimizer: optim.Optimizer,
+    idx: int,
+    losses: Losses,
+):
+    _log_gradient_norm(writer, model, optimizer, idx, losses, "GradNorm1", pnorm=1)
 
 
 def log_gradient_max(
@@ -124,7 +135,6 @@ def log_gradient_max(
     optimizer: optim.Optimizer,
     idx: int,
     losses: Losses,
-    pnorm: int,
 ):
     _log_gradient_norm(
         writer, model, optimizer, idx, losses, "GradMax", pnorm=torch.inf
@@ -154,7 +164,11 @@ def log_errors(
 ):
     if logger.should_log("loss"):
         log_losses(writer, idx, losses)
-    if logger.should_log("loss_grad_norm"):
-        log_gradient_norm(writer, model, optimizer, idx, losses)
+    if logger.should_log("grad_norm1"):
+        log_gradient_norm1(writer, model, optimizer, idx, losses)
+    if logger.should_log("grad_norm2"):
+        log_gradient_norm2(writer, model, optimizer, idx, losses)
+    if logger.should_log("grad_norm_max"):
+        log_gradient_max(writer, model, optimizer, idx, losses)
     if logger.should_log("params_histogram"):
         log_params_hist(writer, model, optimizer, losses.data, idx)

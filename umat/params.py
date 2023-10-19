@@ -42,11 +42,17 @@ PARAMS_SCHEMA = {
     # logging
     "log_flags": {
         "type": str,
-        "choices": ["loss", "loss_grad_norm", "log_grad_max", "params_histogram"],
+        "choices": [
+            "loss",
+            "grad_norm1",
+            "grad_norm2",
+            "grad_norm_max",
+            "params_histogram",
+        ],
         "nargs": "*",
         "help": (
-            "List of logs to be captured. Choose from 'loss', 'loss_grad_norm',"
-            " 'log_grad_max' or 'params_histogram'."
+            "List of logs to be captured. Choose from"
+            f" {['loss', 'grad_norm1', 'grad_norm2', 'grad_norm_max', 'params_histogram']}"
         ),
     },
     "log_frequencies": {
