@@ -44,21 +44,20 @@ class Losses:
     pnt_max_slipresistance: torch.Tensor
 
 
-def log_losses(writer: SummaryWriter, idx: int, losses: Losses, logger: Logger):
+def log_losses(writer: SummaryWriter, idx: int, losses: Losses):
     detach = lambda x: x.detach().item()
-    if logger.should_log("params_histogram"):
-        writer.add_scalars(
-            "Loss",
-            {
-                "data": detach(losses.data),
-                "physics": detach(losses.physics),
-                "penalty_delta_gamma": detach(losses.pnt_delta_gamma),
-                "penalty_negative_gamma": detach(losses.pnt_negative_gamma),
-                "penalty_min_slipresistance": detach(losses.pnt_min_slipresistance),
-                "penalty_max_slipresistance": detach(losses.pnt_max_slipresistance),
-            },
-            idx,
-        )
+    writer.add_scalars(
+        "Loss",
+        {
+            "data": detach(losses.data),
+            "physics": detach(losses.physics),
+            "penalty_delta_gamma": detach(losses.pnt_delta_gamma),
+            "penalty_negative_gamma": detach(losses.pnt_negative_gamma),
+            "penalty_min_slipresistance": detach(losses.pnt_min_slipresistance),
+            "penalty_max_slipresistance": detach(losses.pnt_max_slipresistance),
+        },
+        idx,
+    )
 
 
 def clone_grads(loss, model, optimizer: optim.Optimizer):
@@ -81,35 +80,30 @@ def log_gradient_norm(
     optimizer: optim.Optimizer,
     idx: int,
     losses: Losses,
-    logger: Logger,
 ):
-    if logger.should_log("loss_grad_norm"):
-        writer.add_scalars(
-            "GradNorm",
-            {
-                "data": norm_of_grad(losses.data, model, optimizer, p=2),
-                "physics": norm_of_grad(losses.physics, model, optimizer, p=2),
-                "delta_gamma": norm_of_grad(
-                    losses.pnt_delta_gamma, model, optimizer, p=2
-                ),
-                "negative_gamma": norm_of_grad(
-                    losses.pnt_negative_gamma, model, optimizer, p=2
-                ),
-                "min_slipres": norm_of_grad(
-                    losses.pnt_min_slipresistance, model, optimizer, p=2
-                ),
-                "max_slipres": norm_of_grad(
-                    losses.pnt_max_slipresistance, model, optimizer, p=2
-                ),
-            },
-            idx,
-        )
+    writer.add_scalars(
+        "GradNorm",
+        {
+            "data": norm_of_grad(losses.data, model, optimizer, p=2),
+            "physics": norm_of_grad(losses.physics, model, optimizer, p=2),
+            "delta_gamma": norm_of_grad(losses.pnt_delta_gamma, model, optimizer, p=2),
+            "negative_gamma": norm_of_grad(
+                losses.pnt_negative_gamma, model, optimizer, p=2
+            ),
+            "min_slipres": norm_of_grad(
+                losses.pnt_min_slipresistance, model, optimizer, p=2
+            ),
+            "max_slipres": norm_of_grad(
+                losses.pnt_max_slipresistance, model, optimizer, p=2
+            ),
+        },
+        idx,
+    )
 
 
-def log_params_hist(writer: SummaryWriter, model: nn.Module, idx: int, logger: Logger):
-    if logger.should_log("params_histogram"):
-        for name, param in model.named_parameters():
-            writer.add_histogram(name + "/grad", param.grad.data, idx)
+def log_params_hist(writer: SummaryWriter, model: nn.Module, idx: int):
+    for name, param in model.named_parameters():
+        writer.add_histogram(name + "/grad", param.grad.data, idx)
 
 
 def log_errors(
@@ -120,6 +114,9 @@ def log_errors(
     losses: Losses,
     logger: Logger,
 ):
-    log_losses(writer, idx, losses, logger)
-    log_gradient_norm(writer, model, optimizer, idx, losses, logger)
-    log_params_hist(writer, model, idx, logger)
+    if logger.should_log("loss"):
+        log_losses(writer, idx, losses)
+    if logger.should_log("loss_grad_norm"):
+        log_gradient_norm(writer, model, optimizer, idx, losses)
+    if logger.should_log("params_histogram"):
+        log_params_hist(writer, model, idx)
