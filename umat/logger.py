@@ -131,7 +131,15 @@ def log_gradient_max(
     )
 
 
-def log_params_hist(writer: SummaryWriter, model: nn.Module, idx: int):
+def log_params_hist(
+    writer: SummaryWriter,
+    model: nn.Module,
+    optimizer: optim.Optimizer,
+    loss: torch.Tensor,
+    idx: int,
+):
+    optimizer.zero_grad()
+    loss.backward(retain_graph=True)
     for name, param in model.named_parameters():
         writer.add_histogram(name + "/grad", param.grad.data, idx)
 
@@ -149,4 +157,4 @@ def log_errors(
     if logger.should_log("loss_grad_norm"):
         log_gradient_norm(writer, model, optimizer, idx, losses)
     if logger.should_log("params_histogram"):
-        log_params_hist(writer, model, idx)
+        log_params_hist(writer, model, optimizer, losses.data, idx)
