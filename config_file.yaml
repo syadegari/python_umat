@@ -2,16 +2,17 @@
 coeff_loss_data: 1.0
 coeff_loss_physics: 0.0
 coeff_penalty_delta_gamma: 0.0
-coeff_penalty_positive_gamma: 0.0
+coeff_penalty_negative_gamma: 0.0
 coeff_penalty_min_slipres: 0.0
 coeff_penalty_max_slipres: 0.0
 
 # norm of penalty error
 penalty_pnorm: 1.0
 
-# logging "loss", "loss_grad_norm", "params_histogram"
-log_flags: [loss, loss_grad_norm]
-log_frequencies: [1, 10] 
+# logging losses: view PARAM_SCHEMA for details and
+# possibilities
+log_flags: [loss, grad_norm_max, grad_norm1, grad_norm2]
+log_frequencies: [1, 1, 1, 1] 
 tboard_path: ./runs
 
 sims_path: /Users/syad/Documents/code/umat_ggcm/sims_sample.pkl
@@ -22,7 +23,7 @@ n_epoch: 10
 opt_lr: 0.001
 
 #
-experiment_name: aaa
+experiment_name: test1
 generate_config: false
 
 
