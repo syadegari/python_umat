@@ -4,6 +4,7 @@ __pycache__
 *latexmk
 *gz
 bak
+*.yaml
 # LaTeX temporary files
 # dot2tex
 *-dot2tex-*.dot
