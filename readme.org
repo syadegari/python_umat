@@ -45,3 +45,11 @@ A very wishy-washy explanation, based on what I took from Goodfelllow's book:
  - How to include constraints in the formulation of LBFGS? This won't be needed at the moment since out focus has shifted to compute the loss using PINNs approach. As such, purely optimizing the physical loss is no longer considered. 
 
 ** DONE Add frequency for logging required data into tensorboard. Make sure that frequencies are provided for each logging item.
+
+** TODO Try both gamma_dot equation in its original form and its inverse form. Add this to config_file as a switch
+
+** TODO Replay buffer code. 
+
+** TODO Autoregression code should run from any point in the code (parameter alpha which is between 0 and 1)
+
+** TODO Autoregression computes both stress and gamma/slipres values. Find proper error indicators for gamma.
