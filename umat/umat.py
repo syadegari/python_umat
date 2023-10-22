@@ -295,3 +295,121 @@ def get_driving_force(
     g = gm + gd + gth
 
     return g, H, non_schmid_stress
+
+
+def get_cauchy_stress(theta, F1, Fp0, gamma0, gamma1):
+    """
+    Argument list
+
+    theta [3]: Euler angles
+    F1 [3x3]: Deformation gradient at n+1 time step
+    Fp0 [3x3]: Plastic deformation gradient at n time step
+    gamma0 [24]: Plastic slip at n time step
+    gamma1 [24]: Plastic slip at n+1 time step
+
+    Returns:
+    sigma [3x3]: Cauchy stress tensor at n+1 time step
+
+    Primary usage of this function is at inference to calculate
+    the Cauchy stress from the plastic slip.
+    """
+    rm = rotation_matrix(theta)
+    rotated_slip_system = rotate_slip_system(SlipSys, rm)
+    rotated_elastic_stiffness = rotate_elastic_stiffness(ElasStif, rm)
+
+    Fp1 = plastic_def_grad(gamma1 - gamma0, rotated_slip_system, Fp0)
+    Fe1 = F1 @ torch.linalg.inv(Fp1)
+    S = get_PK2(Fe1.T @ Fe1, rotated_elastic_stiffness)
+    sigma = 1 / (torch.linalg.det(Fe1)) * Fe1 @ S @ Fe1.T
+
+    return sigma
+
+
+def inference_get_beta(dgamma, beta0, slip_res0, slip_res1):
+    """
+    NOTE: This should be used onlly for inference purposes!
+    """
+    # TODO: should we clip slip_res from above and below to be in range?
+    ks = get_ks(slip_res1 - slip_res0, slip_res0)
+    H_matrix = get_H_matrix(ks)
+    ws = get_ws(H_matrix)
+    beta = get_beta(dgamma, ws, beta0)
+    return beta
+
+
+import numpy as np
+
+
+def getF(F_init, F_final, t):
+    assert 0 <= t <= 1
+    return (1 - t) * F_init + F_final * t
+
+
+def get_ts(n_time):
+    return np.linspace(0, 1, n_time + 1)
+
+
+def pairwise(xs):
+    return zip(xs[:-1], xs[1:])
+
+
+def load_model(path_to_model):
+    ...
+
+
+def init_internal_variables():
+    ...
+
+
+def autoregress(F_final, theta, alpha, path_to_model, n_times):
+    """
+    F_final: Final deformation gradient.
+    theta: Euler angles.
+    alpha: value between zero and one (exclusive zero). Determines where we should switch from UMAT to model for autoregression.
+
+    - Start
+    - initiate the model: model=load_model(path_to_model)
+    - initiate internal variables `gamma`, `slip_resistance`, `stress`, `plastic deformation gradient` and `beta` for time t=0
+    - set `defgard F0 = identity`
+    - set `def plastic grad Fp0`
+    - initiate the vector of psedue time `ts`. this ranges from zero to one. For example ts = [0.0, 0.005, 0.01, ... 1.0]
+    - loop
+        get current time `t1`.
+        F0, F1 = get_defgrads(t0, t1)
+        if current time `t` < alpha: # We use UMAT for calculation
+            'use UMAT for prediction'
+            gamma1, slip_res1, sigmav1 = UMAT(t1, F0, F1)
+        else (we have gone beyond alpha threshold and use the train model to get the updated values)
+            gamma1, slipres1 = model(theta, F0, F1, gamma0, slipres0)
+            Fp1 = Fp(theta, F1, Fp0)
+            Fe1 = F1 @ (Fp1) ^ -1
+            S1 = getPK2(Fe1, C)
+            sigma1 = 1/det(Fe1) Fe1.T @ S @ Fe1
+        end
+        # Here we store the values of interest like gamma and slip, beta
+        ...
+    end loop
+    """
+    Fp0, gamma0, slip_res0, beta0 = init_internal_variables()
+    model = load_model(path_to_model)
+    F_init = np.eye(3)
+    for t0, t1 in pairwise(get_ts(n_times)):
+        F0, F1 = getF(F_init, F_final, t0), getF(F_init, F_final, t1)
+        if alpha < t1:
+            print("Use UMAT")
+        else:
+            print("Use trained model")
+            gamma1, slip_res1 = model.forward(
+                theta=theta,
+                defgrad0=F0,
+                defgrad1=F1,
+                gamma0=gamma0,
+                slip_res0=slip_res0,
+            )
+            cauchy = get_cauchy_stress(theta, F1, Fp0, gamma0, gamma1)
+            beta1 = inference_get_beta(
+                dgamma=gamma1 - gamma0,
+                beta0=beta0,
+                slip_res0=slip_res0,
+                slip_res1=slip_res1,
+            )
