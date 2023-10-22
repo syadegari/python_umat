@@ -21,6 +21,7 @@
             vlined,
             noalgohanging,
             ]{algorithm2e}
+
 \DontPrintSemicolon
 
 % Define pseudocode formatting
@@ -210,6 +211,41 @@ Not shown in this graph are all the constants factors and values from timestep $
         update $\sigma_k$\;
     }
 \end{algorithm}
+
+
+
+\begin{algorithm}
+\caption{Autoregressive Model Inference}
+\KwData{$F_{\text{final}}$ (Final deformation gradient), $\theta$ (Euler angles), $\alpha$ (Threshold value in $(0, 1)$), \texttt{path\_to\_model} (Path to the trained model)}
+\KwResult{Updated values of interest like $\gamma$, slip resistance, etc.}
+
+\textbf{Initialization:} \\
+Model $\leftarrow$ Load from \texttt{path\_to\_model} \\
+$(\gamma, \text{slip\_resistance}, \text{stress}, \text{plastic\_def\_grad}, \beta) \leftarrow$ Initialize at $t=0$ \\
+$F_0 \leftarrow$ Identity matrix \\
+$ts \leftarrow$ Generate pseudo-time vector from 0 to 1 \\
+
+\For{each $t_1$ in $ts$}{
+    $F_0$, $F_1$ $\leftarrow$ Compute deformation gradients for current time step $t_1$ \\
+
+    \eIf{$t_1 < \alpha$}{
+        $(\gamma_1, \text{slip\_res\_1}, \sigma_1) \leftarrow$ Compute using UMAT($t_1$, $F_0$, $F_1$) \\
+    }{
+        $(\gamma_1, \text{slip\_res\_1})$ $\leftarrow$ Predict using Model($\theta$, $F_0$, $F_1$, $\gamma_0$, \text{slip\_resistance$_0$}) \\
+        $F_{p_1} \leftarrow$ Compute plastic deformation gradient \\
+        $Fe_1 \leftarrow F_1 \times F_{p_1}^{-1}$ \\
+        $S_1 \leftarrow$ Get second Piola-Kirchhoff stress \\
+        $\sigma_1 \leftarrow$ Compute Cauchy stress \\
+    }
+
+    Store values of interest: $\gamma_1$, \text{slip\_res\_1}, etc. \\
+    Update: $\gamma_0$, \text{slip\_resistance$_0$}, $F_0$ \\
+}
+\end{algorithm}
+
+
+
+    
 
 Conditions $\Delta \gamma_k^{(i)} \ge 0$ and $\Delta s_{n+1}^{(i)} \le s_{\infty}$ translate to the following penalty term:
 
