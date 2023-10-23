@@ -171,6 +171,46 @@ Not shown in this graph are all the constants factors and values from timestep $
 % \end{figure}
 
 \begin{figure}
+    \begin{dot2tex}[dot, mathmode, scale=0.6]
+        digraph G{
+            d2tfigpreamble = "\Huge";
+            graph [mindist=0.5, layout="dot", rankdir=LR];
+            edge [style="-stealth, very thick"];
+            
+    
+            node [shape=none, style=""];
+            gamma0 [texlbl="$\boldsymbol{\gamma}_{n}$"];
+            slipres0 [texlbl="$\boldsymbol{s}_{n}$"];
+            theta [texlbl="$\boldsymbol{\theta}$"];
+            F0 [texlbl="$\bf{F}_n$"];
+            F1 [texlbl="$\bf{F}_{n+1}$"];
+            
+            model_theta   [texlbl="${\sf M}_{\theta}$"]; 
+            model_F       [texlbl="${\sf M}_{F}$"];
+            model_intvars [texlbl="${\sf M}_{\gamma,s}$"];
+
+            stack [texlbl="${\sf Stack}$"];
+            
+            model_shared [texlbl="${\sf M}_{\sf Conv}$"];
+            model_linear [texlbl="${\sf M}_{\sf Lin}$"];
+            
+            gamma1 [texlbl="$\boldsymbol{\gamma}_{n+1}$"];
+            slipres1 [texlbl="$\boldsymbol{s}_{n+1}$"];
+
+            theta -> model_theta;
+            {F0 F1} -> model_F;
+            {gamma0 slipres0} -> model_intvars;
+            
+            {model_intvars model_F model_theta} -> stack -> model_shared -> model_linear;
+            model_linear -> gamma1;
+            model_linear -> slipres1;
+        }
+    \end{dot2tex}
+    \caption{Schematics of the proposed network used for training.}
+\end{figure}
+
+
+\begin{figure}
     \include{comp_graph2.tex}
     \caption{Graph of forward call of computed residuals. The nodes that indicate roots are highlighted with pale blue, 
     while green indicates the leaf of the graph. To make the graph less populated 
