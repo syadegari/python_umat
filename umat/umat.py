@@ -357,6 +357,65 @@ def load_model(path_to_model):
     ...
 
 
+@dataclass
+class HistoryResult:
+    stress: list = field(default_factory=list)
+    gamma: list = field(default_factory=list)
+    slipres: list = field(default_factory=list)
+    beta: list = field(default_factory=list)
+    plastic_defgrad: list = field(default_factory=list)
+
+    def store_values_returned_from_umat(self, xi, sigma):
+        self.stress.append(torch.tensor(sigma.copy()))
+        # Fp     0 ... 9
+        self.plastic_defgrad.append(torch.tensor(xi.copy()[0:9]).reshape(3, 3))
+        # gamma  9 ... 33
+        self.gamma.append(torch.tensor(xi.copy()[9:33]))
+        # slip resistance 33 ... 57
+        self.slipres.append(torch.tensor(xi.copy()[33:57]))
+        # beta   57
+        self.beta.append(torch.tensor(xi.copy()[57]))
+
+    def store_values_returned_from_model(
+        self,
+        Fp: Tensor,
+        gamma: Tensor,
+        slipres: Tensor,
+        beta: Tensor,
+        stress: Tensor,
+    ):
+        self.plastic_defgrad.append(Fp.clone())
+        self.gamma.append(gamma.clone())
+        self.slipres.append(slipres.clone())
+        self.beta.append(beta.clone())
+        # (1, 1) -> (0, 0)
+        # (2, 2) -> (1, 1)
+        # (3, 3) -> (2, 2)
+        # (1, 2) -> (0, 1)
+        # (1, 3) -> (0, 2)
+        # (2, 3) -> (1, 2)
+        voigt_stress = torch.tensor(
+            [
+                stress[0, 0],
+                stress[1, 1],
+                stress[2, 2],
+                stress[0, 1],
+                stress[0, 2],
+                stress[1, 2],
+            ]
+        )
+        self.stress.append(voigt_stress)
+
+    def vectorize(self) -> dict:
+        return {
+            "stress": torch.stack(self.stress),
+            "gamma": torch.stack(self.gamma),
+            "slipres": torch.stack(self.slipres),
+            "beta": torch.stack(self.beta),
+            "plastic_defgrad": torch.stack(self.plastic_defgrad),
+        }
+
+
 def init_internal_variables():
     ...
 
