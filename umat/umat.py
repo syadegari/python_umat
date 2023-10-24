@@ -395,8 +395,8 @@ def autoregress(F_final, theta, alpha, path_to_model, n_times):
     F_init = np.eye(3)
     for t0, t1 in pairwise(get_ts(n_times)):
         F0, F1 = getF(F_init, F_final, t0), getF(F_init, F_final, t1)
-        if alpha < t1:
-            print("Use UMAT")
+        if t1 <= alpha:
+            if t0 == 0.0:
         else:
             print("Use trained model")
             gamma1, slip_res1 = model.forward(
