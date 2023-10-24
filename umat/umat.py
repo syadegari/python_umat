@@ -473,15 +473,78 @@ def autoregress(F_final, theta, alpha, path_to_model, n_times):
         number of time divisions to run the inference with. Must be consistent with
         the trained model delta t
     """
-    Fp0, gamma0, slip_res0, beta0 = init_internal_variables()
+
+    assert (
+        0.0 <= alpha <= 1.0
+    ), "parameter alpha should be between 0.0 and 1.0 (inclusive)"
+
+    if alpha == 0.0:
+        # all computation are done using the model and we don't need to bring values
+        #  from UMAT branch to model branch
+        transfer_once_from_umat_branch = False
+    else:
+        # this covers 0 < alpha < 1 as well as alpha=1.
+        # with alpha=1, we only run the first branch
+        transfer_once_from_umat_branch = True
+
+    hist_result = HistoryResult()
+
+    rm = rotation_matrix(theta)
+    rotated_slip_system = rotate_slip_system(SlipSys, rm)
+
     model = load_model(path_to_model)
+
     F_init = np.eye(3)
     for t0, t1 in pairwise(get_ts(n_times)):
         F0, F1 = getF(F_init, F_final, t0), getF(F_init, F_final, t1)
         if t1 <= alpha:
             if t0 == 0.0:
+                # initialize parameters that are used only by UMAT
+                c = np.zeros([6, 6], order="F")
+                sigma = np.zeros(6)
+                xi = np.zeros(93)
+                # Use the fortran subroutine to
+                pysdvini(xi)
+                # store the initial values
+                hist_result.store_values_returned_from_umat(
+                    xi.copy(), sigma=np.zeros(6)
+                )
+            # Call the UMAT to update sigma, c and xi
+            fortumat(
+                f1=F0,
+                f2=F1,
+                t1=t0,
+                t2=t1,
+                initemp=consts.Theta0,
+                sigma=sigma,
+                c=c,
+                xi=xi,
+                angles=theta,
+            )
+            # store values after each call to umat
+            hist_result.store_values_returned_from_umat(xi.copy(), sigma.copy())
         else:
-            print("Use trained model")
+            # First time we run this branch, we have to bring some of the variables for time n from
+            # the previous branch. We need a flag to determine this.
+            if transfer_once_from_umat_branch:
+                Fp0 = hist_result.plastic_defgrad[-1].clone()
+                gamma0 = hist_result.gamma[-1].clone()
+                slip_res0 = hist_result.slip_res[-1].clone()
+                beta0 = hist_result.beta[-1].clone()
+
+                transfer_once_from_umat_branch = False
+
+            if t0 == 0:
+                # init variables and store them
+                Fp0, gamma0, slip_res0, beta0 = init_internal_variables()
+                hist_result.store_values_returned_from_model(
+                    Fp0,
+                    gamma0,
+                    slip_res0,
+                    beta0,
+                    torch.zeros(3, 3, dtype=torch.float64),
+                )
+
             gamma1, slip_res1 = model.forward(
                 theta=theta,
                 defgrad0=F0,
@@ -489,10 +552,23 @@ def autoregress(F_final, theta, alpha, path_to_model, n_times):
                 gamma0=gamma0,
                 slip_res0=slip_res0,
             )
-            cauchy = get_cauchy_stress(theta, F1, Fp0, gamma0, gamma1)
+            Fp1 = plastic_def_grad(gamma1 - gamma0, rotated_slip_system, Fp0)
+            cauchy_stress = get_cauchy_stress(theta, F1, Fp0, gamma0, gamma1)
             beta1 = inference_get_beta(
                 dgamma=gamma1 - gamma0,
                 beta0=beta0,
                 slip_res0=slip_res0,
                 slip_res1=slip_res1,
             )
+
+            hist_result.store_values_returned_from_model(
+                Fp1, gamma1, slip_res1, beta1, cauchy_stress
+            )
+
+            # set the values for the next timestep
+            gamma0 = gamma1
+            slip_res0 = slip_res1
+            beta0 = beta1
+            Fp0 = Fp1
+    #
+    return hist_result.vectorize()
