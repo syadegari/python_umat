@@ -417,7 +417,12 @@ class HistoryResult:
 
 
 def init_internal_variables():
-    ...
+    gamma_init = torch.zero_(24, dtype=torch.float64)
+    Fp_init = torch.eye(3, dtype=torch.float64)
+    beta_init = torch.tensor(0.0, dtype=torch.float64)
+    slipres_init = consts.s0_F * torch.ones(24, dtype=torch.float64)
+
+    return Fp_init, gamma_init, slipres_init, beta_init
 
 
 def autoregress(F_final, theta, alpha, path_to_model, n_times):
