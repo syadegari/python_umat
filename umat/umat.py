@@ -1,4 +1,7 @@
+from dataclasses import dataclass, field
+import numpy as np
 import torch
+from torch import Tensor
 from torch.func import vmap
 import einops
 
@@ -337,16 +340,13 @@ def inference_get_beta(dgamma, beta0, slip_res0, slip_res1):
     return beta
 
 
-import numpy as np
-
-
 def getF(F_init, F_final, t):
     assert 0 <= t <= 1
     return (1 - t) * F_init + F_final * t
 
 
 def get_ts(n_time):
-    return np.linspace(0, 1, n_time + 1)
+    return np.linspace(0, 1, n_time + 1).round(12)
 
 
 def pairwise(xs):
