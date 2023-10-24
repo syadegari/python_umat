@@ -359,13 +359,13 @@ def load_model(path_to_model):
 
 @dataclass
 class HistoryResult:
-    stress: list = field(default_factory=list)
-    gamma: list = field(default_factory=list)
-    slipres: list = field(default_factory=list)
-    beta: list = field(default_factory=list)
-    plastic_defgrad: list = field(default_factory=list)
+    stress: list[Tensor] = field(default_factory=list)
+    gamma: list[Tensor] = field(default_factory=list)
+    slipres: list[Tensor] = field(default_factory=list)
+    beta: list[Tensor] = field(default_factory=list)
+    plastic_defgrad: list[Tensor] = field(default_factory=list)
 
-    def store_values_returned_from_umat(self, xi, sigma):
+    def store_values_returned_from_umat(self, xi: np.ndarray, sigma: np.ndarray):
         self.stress.append(torch.tensor(sigma.copy()))
         # Fp     0 ... 9
         self.plastic_defgrad.append(torch.tensor(xi.copy()[0:9]).reshape(3, 3))
