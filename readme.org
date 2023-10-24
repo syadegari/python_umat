@@ -53,3 +53,9 @@ A very wishy-washy explanation, based on what I took from Goodfelllow's book:
 ** TODO Autoregression code should run from any point in the code (parameter alpha which is between 0 and 1)
 
 ** TODO Autoregression computes both stress and gamma/slipres values. Find proper error indicators for gamma.
+
+** TODO Submodule the UMAT/Fortran repo to use it for inference.
+
+** TODO At inference time, we need to clip gamma and slip resistance that we get from the model
+ - delta gamma should be strictly non-negative
+ - slip resistance should be clipped between min and max slip resistance
