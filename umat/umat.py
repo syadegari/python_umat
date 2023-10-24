@@ -448,6 +448,30 @@ def autoregress(F_final, theta, alpha, path_to_model, n_times):
         # Here we store the values of interest like gamma and slip, beta
         ...
     end loop
+
+    Parameters:
+    -----------
+    F_final : array [3x3]
+        Deformation gradient used for running the autoregression
+
+    theta: array [3]
+        Euler angles/orientation in radian
+
+    alpha : float in range [0, 1]
+        Controls which portion of the autoregression to run with the model
+        - alpha = 0; All calculation done by the trained model
+        - 0 < alpha < 1; First use UMAT and when `ts` exceeds alpha then switch
+          to the trained model. In this mode we should handle the (once) transfer
+          of information for time t_n from UMAT computations to the other branch
+          to compute with the model
+        - alpha = 1; All calculations are done using UMAT.
+
+    path_to_model : str
+        Path to the trained model
+
+    n_times: int
+        number of time divisions to run the inference with. Must be consistent with
+        the trained model delta t
     """
     Fp0, gamma0, slip_res0, beta0 = init_internal_variables()
     model = load_model(path_to_model)
