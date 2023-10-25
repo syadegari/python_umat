@@ -163,7 +163,3 @@ def train(params):
         model.state_dict(),
         f'{params["config_file_path"]}/{params["experiment_name"]}.pth',
     )
-
-
-if __name__ == "__main__":
-    train()
