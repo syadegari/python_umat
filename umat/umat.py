@@ -9,6 +9,7 @@ import einops
 from .constants import consts
 from .trip_ferrite_data import SlipSys, ElasStif
 from .model import Model
+from umat_ggcm.pyUMATLink import pysdvini, fortumat
 
 from typing import Union, Tuple, TypeVar
 

@@ -1,0 +1,4 @@
+[submodule "umat_ggcm"]
+	path = umat_ggcm
+	url = https://github.com/syadegari/umat_ggcm
+	branch = ferrite_only
