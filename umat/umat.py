@@ -1,12 +1,14 @@
 from dataclasses import dataclass, field
 import numpy as np
 import torch
+import torch.nn as nn
 from torch import Tensor
 from torch.func import vmap
 import einops
 
 from .constants import consts
 from .trip_ferrite_data import SlipSys, ElasStif
+from .model import Model
 
 from typing import Union, Tuple, TypeVar
 
@@ -354,7 +356,9 @@ def pairwise(xs):
 
 
 def load_model(path_to_model):
-    ...
+    model = Model(nn.Tanh()).to(torch.float64)
+    model.load_state_dict(torch.load(path_to_model))
+    return model
 
 
 @dataclass
