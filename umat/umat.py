@@ -11,20 +11,8 @@ from .trip_ferrite_data import SlipSys, ElasStif
 from .model import Model
 from umat_ggcm.pyUMATLink import pysdvini, fortumat
 
-from typing import Union, Tuple, TypeVar
-
-# B = TypeVar("B")
-# FloatTensor = Union[torch.float32, torch.float64]
-
-# Defining Batch size as a Type Variable
-B = TypeVar("B")
-
-
-# This is a way to represent a tensor with certain shape constraints
-class FloatTensor(torch.Tensor):
-    @classmethod
-    def __class_getitem__(cls, item):
-        return cls
+from typing import Union, List
+from .types import FloatTensor, B
 
 
 # TODO: Decide what to do with these annotations
@@ -364,11 +352,11 @@ def load_model(path_to_model):
 
 @dataclass
 class HistoryResult:
-    stress: list[Tensor] = field(default_factory=list)
-    gamma: list[Tensor] = field(default_factory=list)
-    slipres: list[Tensor] = field(default_factory=list)
+    stress: List[FloatTensor[24]] = field(default_factory=list)
+    gamma: list[FloatTensor[24]] = field(default_factory=list)
+    slipres: list[FloatTensor[24]] = field(default_factory=list)
     beta: list[Tensor] = field(default_factory=list)
-    plastic_defgrad: list[Tensor] = field(default_factory=list)
+    plastic_defgrad: list[FloatTensor[3, 3]] = field(default_factory=list)
 
     def store_values_returned_from_umat(self, xi: np.ndarray, sigma: np.ndarray):
         self.stress.append(torch.tensor(sigma.copy()))

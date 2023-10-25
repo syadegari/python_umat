@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .types import FloatTensor, B
+
 
 class Model(nn.Module):
     def __init__(self, activation_fn):
@@ -43,7 +45,14 @@ class Model(nn.Module):
 
         self.flatten = nn.Linear(640, 48)
 
-    def forward(self, theta, defgrad0, defgrad1, gamma0, slip_res0):
+    def forward(
+        self,
+        theta: FloatTensor[B, 3],
+        defgrad0: FloatTensor[B, 9],
+        defgrad1: FloatTensor[B, 9],
+        gamma0: FloatTensor[B, 24],
+        slip_res0: FloatTensor[B, 24],
+    ):
         x1 = self.f_theta(theta)
         x2 = self.f_defGrad(torch.cat((defgrad0, defgrad1), dim=1))
         x3 = self.f_intvars(torch.cat((gamma0, slip_res0), dim=1))
