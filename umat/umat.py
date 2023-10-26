@@ -559,14 +559,14 @@ def autoregress(F_final, theta, alpha, path_to_model, n_times):
             # only accept nonzero values of delta gamma
             gamma1 = torch.where(gamma1 >= gamma0, gamma1, gamma0)
 
+            Fp1 = vmap(plastic_def_grad)(gamma1 - gamma0, rotated_slip_system, Fp0)
+            cauchy_stress = vmap(get_cauchy_stress)(
+                torch.tensor(F1).reshape(1, 3, 3),
+                Fp1,
+                rotated_elastic_stiffness,
             )
-            Fp1 = plastic_def_grad(gamma1 - gamma0, rotated_slip_system, Fp0)
-            cauchy_stress = get_cauchy_stress(theta, F1, Fp0, gamma0, gamma1)
-            beta1 = inference_get_beta(
-                dgamma=gamma1 - gamma0,
-                beta0=beta0,
-                slip_res0=slip_res0,
-                slip_res1=slip_res1,
+            beta1 = vmap(inference_get_beta)(
+                gamma1 - gamma0, beta0, slip_res0, slip_res1
             )
 
             hist_result.store_values_returned_from_model(
