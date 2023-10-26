@@ -552,6 +552,13 @@ def autoregress(F_final, theta, alpha, path_to_model, n_times):
                     gamma0=gamma0.reshape(1, -1),  # [1, 24]
                     slip_res0=slip_res0.reshape(1, -1),  # [1, 24]
                 )
+
+            # clip the values of slip resistance to be between two bounds
+            slip_res1 = torch.clip(slip_res1, consts.s0_F, consts.sInf_F)
+
+            # only accept nonzero values of delta gamma
+            gamma1 = torch.where(gamma1 >= gamma0, gamma1, gamma0)
+
             )
             Fp1 = plastic_def_grad(gamma1 - gamma0, rotated_slip_system, Fp0)
             cauchy_stress = get_cauchy_stress(theta, F1, Fp0, gamma0, gamma1)
