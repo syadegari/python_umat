@@ -79,25 +79,41 @@ def train(params):
                 gamma0=vals0.gamma,
                 slip_res0=vals0.slip_res,
             )
+
+            clipped_slipres1_hat = torch.clip(slipres1_hat, consts.s0_F, consts.sInf_F)
+            # ensures that dgamma >= 0.0
+            clipped_gamma1_hat = torch.where(
+                gamma1_hat >= vals0.gamma, gamma1_hat, vals0.gamma
+            )
+
             # driving force g at n+1
             g1, H_matrix, non_schmid_stress = get_driving_force(
                 slip_resistance0=vals0.slip_res,
-                slip_resistance1=slipres1_hat,
-                delta_gamma=gamma1_hat - vals0.gamma,
+                slip_resistance1=clipped_slipres1_hat,
+                delta_gamma=clipped_gamma1_hat - vals0.gamma,
                 beta0=vals0.beta,
                 Fp0=vals0.Fp.reshape(-1, 3, 3),
                 theta=vals0.theta,
                 F1=vals0.F1.reshape(-1, 3, 3),
             )
+
             r_I = vmap(get_rI)(
-                vals0.slip_res, slipres1_hat, vals0.gamma, gamma1_hat, H_matrix
+                vals0.slip_res,
+                # clip s1 to be between min and max
+                clipped_slipres1_hat,
+                vals0.gamma,
+                # gamma1 should be bigger than or equal to gamma0
+                clipped_gamma1_hat,
+                H_matrix,
             )
             r_II = vmap(get_rII)(
                 g1,
-                slipres1_hat,
+                # clip s1 to be between min and max
+                clipped_slipres1_hat,
                 non_schmid_stress,
                 vals0.gamma,
-                gamma1_hat,
+                # gamma1 should be bigger than or equal to gamma0
+                clipped_gamma1_hat,
                 torch.tensor(n_batch * [consts.GammaDot0_F], dtype=torch.float64),
                 torch.tensor(n_batch * [consts.pExp_F], dtype=torch.float64),
                 torch.tensor(n_batch * [dtime], dtype=torch.float64),
