@@ -485,8 +485,9 @@ def autoregress(F_final, theta, alpha, path_to_model, n_times):
 
     hist_result = HistoryResult()
 
-    rm = rotation_matrix(theta)
+    rm = rotation_matrix(torch.tensor(theta).reshape(1, -1))
     rotated_slip_system = rotate_slip_system(SlipSys, rm)
+    rotated_elastic_stiffness = rotate_elastic_stiffness(ElasStif, rm)
 
     model = load_model(path_to_model)
 
