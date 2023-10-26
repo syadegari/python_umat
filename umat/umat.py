@@ -524,10 +524,11 @@ def autoregress(F_final, theta, alpha, path_to_model, n_times):
             # First time we run this branch, we have to bring some of the variables for time n from
             # the previous branch. We need a flag to determine this.
             if transfer_once_from_umat_branch:
-                Fp0 = hist_result.plastic_defgrad[-1].clone()
-                gamma0 = hist_result.gamma[-1].clone()
-                slip_res0 = hist_result.slip_res[-1].clone()
-                beta0 = hist_result.beta[-1].clone()
+                make_batch_1 = lambda x: einops.rearrange(x, "... -> 1 ...")
+                Fp0 = make_batch_1(hist_result.plastic_defgrad[-1].clone())
+                gamma0 = make_batch_1(hist_result.gamma[-1].clone())
+                slip_res0 = make_batch_1(hist_result.slipres[-1].clone())
+                beta0 = make_batch_1(hist_result.beta[-1].clone())
 
                 transfer_once_from_umat_branch = False
 
