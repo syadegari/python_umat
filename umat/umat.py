@@ -541,7 +541,7 @@ def autoregress(F_final, theta, alpha, path_to_model, n_times):
                     gamma0,
                     slip_res0,
                     beta0,
-                    torch.zeros(3, 3, dtype=torch.float64),
+                    torch.zeros(1, 3, 3, dtype=torch.float64),
                 )
 
             with torch.no_grad():
