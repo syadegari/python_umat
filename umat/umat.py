@@ -490,6 +490,7 @@ def autoregress(F_final, theta, alpha, path_to_model, n_times):
     rotated_elastic_stiffness = rotate_elastic_stiffness(ElasStif, rm)
 
     model = load_model(path_to_model)
+    model.eval()
 
     F_init = np.eye(3)
     for t0, t1 in pairwise(get_ts(n_times)):
@@ -543,12 +544,14 @@ def autoregress(F_final, theta, alpha, path_to_model, n_times):
                     torch.zeros(3, 3, dtype=torch.float64),
                 )
 
-            gamma1, slip_res1 = model.forward(
-                theta=theta,
-                defgrad0=F0,
-                defgrad1=F1,
-                gamma0=gamma0,
-                slip_res0=slip_res0,
+            with torch.no_grad():
+                gamma1, slip_res1 = model.forward(
+                    theta=torch.tensor(theta).reshape(1, -1),  # [1, 3]
+                    defgrad0=torch.tensor(F0).reshape(1, -1),  # [1, 9]
+                    defgrad1=torch.tensor(F1).reshape(1, -1),  # [1, 9]
+                    gamma0=gamma0.reshape(1, -1),  # [1, 24]
+                    slip_res0=slip_res0.reshape(1, -1),  # [1, 24]
+                )
             )
             Fp1 = plastic_def_grad(gamma1 - gamma0, rotated_slip_system, Fp0)
             cauchy_stress = get_cauchy_stress(theta, F1, Fp0, gamma0, gamma1)
