@@ -371,24 +371,26 @@ class HistoryResult:
         beta: Tensor,
         stress: Tensor,
     ):
-        self.plastic_defgrad.append(Fp.clone())
-        self.gamma.append(gamma.clone())
-        self.slipres.append(slipres.clone())
-        self.beta.append(beta.clone())
-        # (1, 1) -> (0, 0)
-        # (2, 2) -> (1, 1)
-        # (3, 3) -> (2, 2)
-        # (1, 2) -> (0, 1)
-        # (1, 3) -> (0, 2)
-        # (2, 3) -> (1, 2)
+        self.plastic_defgrad.append(Fp.clone().squeeze())
+        self.gamma.append(gamma.clone().squeeze())
+        self.slipres.append(slipres.clone().squeeze())
+        self.beta.append(beta.clone().squeeze())
+        # Voigt notation:
+        #
+        # 1: (1, 1) -> 0: (0, 0)
+        # 2: (2, 2) -> 1: (1, 1)
+        # 3: (3, 3) -> 2: (2, 2)
+        # 4: (1, 2) -> 3: (0, 1)
+        # 5: (1, 3) -> 4: (0, 2)
+        # 6: (2, 3) -> 5: (1, 2)
         voigt_stress = torch.tensor(
             [
-                stress[0, 0],
-                stress[1, 1],
-                stress[2, 2],
-                stress[0, 1],
-                stress[0, 2],
-                stress[1, 2],
+                stress[0, 0, 0],
+                stress[0, 1, 1],
+                stress[0, 2, 2],
+                stress[0, 0, 1],
+                stress[0, 0, 2],
+                stress[0, 1, 2],
             ]
         )
         self.stress.append(voigt_stress)
