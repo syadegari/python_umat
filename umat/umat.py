@@ -291,15 +291,13 @@ def get_driving_force(
     return g, H, non_schmid_stress
 
 
-def get_cauchy_stress(theta, F1, Fp0, gamma0, gamma1):
+def get_cauchy_stress(F, Fp, elastic_stiffness):
     """
     Argument list
 
-    theta [3]: Euler angles
-    F1 [3x3]: Deformation gradient at n+1 time step
-    Fp0 [3x3]: Plastic deformation gradient at n time step
-    gamma0 [24]: Plastic slip at n time step
-    gamma1 [24]: Plastic slip at n+1 time step
+    F [3x3]: Deformation gradient
+    Fp [3x3]: Plastic deformation gradient
+    elastic_stiffness [3x3x3x3]: Elastic stiffness tensor
 
     Returns:
     sigma [3x3]: Cauchy stress tensor at n+1 time step
@@ -307,14 +305,10 @@ def get_cauchy_stress(theta, F1, Fp0, gamma0, gamma1):
     Primary usage of this function is at inference to calculate
     the Cauchy stress from the plastic slip.
     """
-    rm = rotation_matrix(theta)
-    rotated_slip_system = rotate_slip_system(SlipSys, rm)
-    rotated_elastic_stiffness = rotate_elastic_stiffness(ElasStif, rm)
 
-    Fp1 = plastic_def_grad(gamma1 - gamma0, rotated_slip_system, Fp0)
-    Fe1 = F1 @ torch.linalg.inv(Fp1)
-    S = get_PK2(Fe1.T @ Fe1, rotated_elastic_stiffness)
-    sigma = 1 / (torch.linalg.det(Fe1)) * Fe1 @ S @ Fe1.T
+    Fe = F @ torch.linalg.inv(Fp)
+    S = get_PK2(Fe.T @ Fe, elastic_stiffness)
+    sigma = 1 / (torch.linalg.det(Fe)) * Fe @ S @ Fe.T
 
     return sigma
 
