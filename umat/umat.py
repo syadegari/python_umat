@@ -406,10 +406,12 @@ class HistoryResult:
 
 
 def init_internal_variables():
-    gamma_init = torch.zeros(24, dtype=torch.float64)
-    Fp_init = torch.eye(3, dtype=torch.float64)
-    beta_init = torch.tensor(0.0, dtype=torch.float64)
-    slipres_init = consts.s0_F * torch.ones(24, dtype=torch.float64)
+    # Since we are using this only in the model branch, we should batch
+    #  these values before sending them to the main routine
+    gamma_init = torch.zeros(1, 24, dtype=torch.float64)
+    Fp_init = torch.eye(3, dtype=torch.float64).reshape(1, 3, 3)
+    beta_init = torch.tensor([0.0], dtype=torch.float64)
+    slipres_init = consts.s0_F * torch.ones(1, 24, dtype=torch.float64)
 
     return Fp_init, gamma_init, slipres_init, beta_init
 
