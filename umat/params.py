@@ -67,7 +67,7 @@ PARAMS_SCHEMA = {
     "n_batch": {"type": int, "help": "Batch size for training."},
     "n_epoch": {"type": int, "help": "Number of epochs for training."},
     "opt_lr": {"type": float, "help": "Learning rate for the optimizer."},
-    # Uncomment these if needed and provided with help descriptions
+    # Uncomment these if needed
     # "opt_name": {
     #     "type": str,
     #     "choices": ["SGD", "Adam", "AdamW"],
