@@ -115,8 +115,8 @@ def train(params):
                 # gamma1 should be bigger than or equal to gamma0
                 clipped_gamma1_hat,
                 torch.tensor(n_batch * [consts.GammaDot0_F], dtype=torch.float64),
-                torch.tensor(n_batch * [consts.pExp_F], dtype=torch.float64),
                 torch.tensor(n_batch * [dtime], dtype=torch.float64),
+                torch.tensor(n_batch * [consts.pExp_F], dtype=torch.float64),
             )
             physics_loss = F.mse_loss(r_I, torch.zeros_like(r_I)) + F.mse_loss(
                 r_II, torch.zeros_like(r_II)
