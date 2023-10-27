@@ -5,8 +5,6 @@ import logging
 from typing import Union
 import torch
 
-from dataclasses import dataclass
-
 
 PARAMS_SCHEMA = {
     # weights for the loss
