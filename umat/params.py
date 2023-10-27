@@ -20,10 +20,6 @@ PARAMS_SCHEMA = {
         "type": float,
         "help": "Coefficient for the negative delta gamma penalty.",
     },
-    "coeff_penalty_negative_gamma": {
-        "type": float,
-        "help": "Coefficient for the negative gamma penalty.",
-    },
     "coeff_penalty_min_slipres": {
         "type": float,
         "help": "Penalty coefficient for violating the minimum slip resistance.",

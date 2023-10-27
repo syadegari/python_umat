@@ -49,7 +49,6 @@ def train(params):
     coeff_data = params["coeff_loss_data"]
     coeff_physics = params["coeff_loss_physics"]
     penalty_coeff_delta_gamma = params["coeff_penalty_delta_gamma"]
-    penalty_coeff_negative_gamma = params["coeff_penalty_negative_gamma"]
     penalty_coeff_min_slipres = params["coeff_penalty_min_slipres"]
     penalty_coeff_max_slipres = params["coeff_penalty_max_slipres"]
     pnorm = params["penalty_pnorm"]
@@ -147,7 +146,6 @@ def train(params):
                     data=data_loss,
                     physics=physics_loss,
                     pnt_delta_gamma=penalty_delta_gamma.norm(p=1, dim=1).mean(),
-                    pnt_negative_gamma=penalty_negative_gamma.norm(p=1, dim=1).mean(),
                     pnt_min_slipresistance=penalty_min_slipresistance.norm(
                         p=1, dim=1
                     ).mean(),
@@ -164,7 +162,6 @@ def train(params):
                 coeff_data * data_loss
                 + coeff_physics * physics_loss
                 + penalty_coeff_delta_gamma * penalty_delta_gamma.norm(p=pnorm)
-                + penalty_coeff_negative_gamma * penalty_negative_gamma.norm(p=pnorm)
                 + penalty_coeff_min_slipres * penalty_min_slipresistance.norm(p=pnorm)
                 + penalty_coeff_max_slipres * penalty_max_slipresistance.norm(p=pnorm)
             )

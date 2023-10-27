@@ -43,7 +43,6 @@ class Losses:
     data: torch.Tensor
     physics: torch.Tensor
     pnt_delta_gamma: torch.Tensor
-    pnt_negative_gamma: torch.Tensor
     pnt_min_slipresistance: torch.Tensor
     pnt_max_slipresistance: torch.Tensor
 
@@ -56,7 +55,6 @@ def log_losses(writer: SummaryWriter, idx: int, losses: Losses):
             "data": detach(losses.data),
             "physics": detach(losses.physics),
             "penalty_delta_gamma": detach(losses.pnt_delta_gamma),
-            "penalty_negative_gamma": detach(losses.pnt_negative_gamma),
             "penalty_min_slipresistance": detach(losses.pnt_min_slipresistance),
             "penalty_max_slipresistance": detach(losses.pnt_max_slipresistance),
         },
@@ -94,9 +92,6 @@ def _log_gradient_norm(
             "physics": norm_of_grad(losses.physics, model, optimizer, p=pnorm),
             "delta_gamma": norm_of_grad(
                 losses.pnt_delta_gamma, model, optimizer, p=pnorm
-            ),
-            "negative_gamma": norm_of_grad(
-                losses.pnt_negative_gamma, model, optimizer, p=pnorm
             ),
             "min_slipres": norm_of_grad(
                 losses.pnt_min_slipresistance, model, optimizer, p=pnorm

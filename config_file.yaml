@@ -2,7 +2,6 @@
 coeff_loss_data: 1.0
 coeff_loss_physics: 0.0
 coeff_penalty_delta_gamma: 0.0
-coeff_penalty_negative_gamma: 0.0
 coeff_penalty_min_slipres: 0.0
 coeff_penalty_max_slipres: 0.0
 
