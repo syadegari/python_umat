@@ -50,12 +50,21 @@ A very wishy-washy explanation, based on what I took from Goodfelllow's book:
 
 ** TODO Replay buffer code. 
 
-** TODO Autoregression code should run from any point in the code (parameter alpha which is between 0 and 1)
+** DONE Autoregression code should run from any point in the code (parameter alpha which is between 0 and 1)
 
 ** TODO Autoregression computes both stress and gamma/slipres values. Find proper error indicators for gamma.
 
-** TODO Submodule the UMAT/Fortran repo to use it for inference.
+** TODO Make sure that the computation of stresses from gamma/slip values is consistent and error free.
+
+** DONE Submodule the UMAT/Fortran repo to use it for inference.
 
 ** TODO At inference time, we need to clip gamma and slip resistance that we get from the model
  - delta gamma should be strictly non-negative
  - slip resistance should be clipped between min and max slip resistance
+** TODO How to deal with multiple, competing losses.
+*** TODO Implement a warmup period for where physics is not calculated. There are two approached to this:
+ 1. Try to see if relative error make sense. For example, as long as the physics loss is bigger than 10 data loss don't compute the physics loss
+ 2. Simply skip computing the physics loss for eg 100 iterations.
+*** TODO Clipping the gardient. Clip gradient of each loss separately. But for this we need to accumulate the gradients individually from each loss without the help from the optimizer. See how this should be implemented.
+*** TODO L2 regularization of weights of the network. 
+
