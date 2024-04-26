@@ -18,7 +18,7 @@ To address this, one can use the dtype of the input when initializing the matric
 The test shows that the outputs from both Fortran and Python/PyTorch are within the margin of machine epsilon for double precision. 
 
 ## Test Workflow
-The workflow is largely inspired by the `einsum_test` suite. It involves a Fortran file reading the predefined angles and writing them to a data file, `angles.dat`. This file serves as an input for both `rotation_matrix_fortran.f90` and `rotation_matrix_python.py`, each generating the rotation matrix using their respective methods. The results are saved into `rotation_matrix_fortran.dat` and `rotation_matrix_python.dat`. Subsequently, `compare_results.py` contrasts these results and prints the relative difference between the two. 
+The workflow is largely inspired by the `einsum_test` suite. It involves a Fortran file reading the predefined angles and writing them to a data file, `angles.dat`. This file serves as an input for both `rotation_matrix_fortran.f90` and `rotation_matrix_python.py`, each generating the rotation matrix using their respective methods. The results are saved into `rotation_matrix_fortran.dat` and `rotation_matrix_python.dat`. Subsequently, `compare_results.py` compares these results and prints the relative difference between the two. 
 
 ## How to Run
 

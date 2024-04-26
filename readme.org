@@ -4,7 +4,7 @@ Redesign the umat in python
 
 * Why are we doing this?
 ** How UMAT works
-What happens in UMAT is simple: at its heart, the return-mapping-algorithm, solves a nonlinear system using NR procedure. There are 48 unknowns/equations in this system. 24 are the amount of (plastic) slip and 24 are the plastic slip resistances. Because of the nonlinear nature of this system of equations, we solve this system by perturbing on unnkown at a time and form a jacobian, which we will use to update the values of the unknowns while iterating.
+What happens in UMAT is simple: at its heart, the return-mapping-algorithm, solves a nonlinear system using the NR procedure. There are 48 unknowns/equations in this system. 24 are the amount of (plastic) slip and 24 are the plastic slip resistances. Because of the nonlinear nature of this system of equations, we solve this system by perturbing on unnkown at a time and form a jacobian, which we will use to update the values of the unknowns while iterating.
 
 ** What we hope to achieve
 - If we can identify the forward pass in the UMAT (the one that we use as a starting point for perturbation), then we can implement that in pytorch. Then we can investigate if this forward pass will give us a gradient. If yes, we use this gradient to multiply with the residual vector
@@ -42,7 +42,7 @@ All the umat routine are tested and verified (constants, construction and batch 
 A very wishy-washy explanation, based on what I took from Goodfelllow's book:
  The main effect of L1-regularization is that the gradient does not scale with the value of parameters, as is the case with L2-regularization. Instead, we get unit gradients for each parameter of the optimization. This, combine with a large penalty coefficient, pushes the parameter to the boundaries (or beyond, which in that case, it is being projected back to the boundary) of the subspace that defines the permissible space for optimization. In short, there is a higher chance, although not guaranteed, that L1-regularization will lead to sparse parameter set than L2-regularization.
 ** DONE Try LBFGS 
- - How to include constraints in the formulation of LBFGS? This won't be needed at the moment since out focus has shifted to compute the loss using PINNs approach. As such, purely optimizing the physical loss is no longer considered. 
+ - How to include constraints in the formulation of LBFGS? This won't be needed at the moment since our focus has shifted to compute the loss using PINNs approach. As such, solely optimizing the physical loss is no longer considered. 
 
 ** DONE Add frequency for logging required data into tensorboard. Make sure that frequencies are provided for each logging item.
 
@@ -66,7 +66,7 @@ ACTION:
    Both of these are implemented at both train and inference code. 
 ** TODO How to deal with multiple, competing losses.
 *** TODO Implement a warmup period for where physics is not calculated. There are two approached to this:
- 1. Try to see if relative error make sense. For example, as long as the physics loss is bigger than 10 data loss don't compute the physics loss
+ 1. Try to see if relative error make sense. For example, as long as the physics loss is bigger than 10x data_loss don't compute the physics loss
  2. Simply skip computing the physics loss for eg 100 iterations.
 *** TODO Clipping the gardient. Clip gradient of each loss separately. But for this we need to accumulate the gradients individually from each loss without the help from the optimizer. See how this should be implemented.
 *** TODO L2 regularization of weights of the network.
