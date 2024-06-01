@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
+from torch.optim.optimizer import Optimizer
+from typing import Union
 
 
 @dataclass
@@ -17,14 +19,12 @@ class LogFlags:
 
 
 class Logger:
-    def __init__(self, log_flags: list[str], log_frequencies: list[int]):
+    def __init__(self, log_flags: list[str], log_frequencies: list[int]) -> None:
         self.log_flags = LogFlags()
         for log_name in log_flags:
             setattr(self.log_flags, log_name, True)
         # set the counter to zero for the log keys that are requested
-        self.log_frequencies = {
-            log_flag: log_freq for log_flag, log_freq in zip(log_flags, log_frequencies)
-        }
+        self.log_frequencies = {log_flag: log_freq for log_flag, log_freq in zip(log_flags, log_frequencies)}
         self._counters = {k: 0 for k in log_flags}
 
     def should_log(self, key: str) -> bool:
@@ -47,7 +47,7 @@ class Losses:
     pnt_max_slipresistance: torch.Tensor
 
 
-def log_losses(writer: SummaryWriter, idx: int, losses: Losses):
+def log_losses(writer: SummaryWriter, idx: int, losses: Losses) -> None:
     detach = lambda x: x.detach().item()
     writer.add_scalars(
         "Loss",
@@ -68,11 +68,11 @@ def clone_grads(loss, model, optimizer: optim.Optimizer):
     return [p.grad.clone() for p in model.parameters()]
 
 
-def norm_of_ts(ts, p):
+def norm_of_ts(ts, p: Union[None, float, str]):
     return torch.concat([t.reshape(-1) for t in ts]).norm(p)
 
 
-def norm_of_grad(loss, model, optimizer, p):
+def norm_of_grad(loss, model, optimizer: Optimizer, p: Union[None, float, str]):
     return norm_of_ts(clone_grads(loss, model, optimizer), p)
 
 
@@ -84,21 +84,15 @@ def _log_gradient_norm(
     losses: Losses,
     groupname: str,
     pnorm: int,
-):
+) -> None:
     writer.add_scalars(
         groupname,
         {
             "data": norm_of_grad(losses.data, model, optimizer, p=pnorm),
             "physics": norm_of_grad(losses.physics, model, optimizer, p=pnorm),
-            "delta_gamma": norm_of_grad(
-                losses.pnt_delta_gamma, model, optimizer, p=pnorm
-            ),
-            "min_slipres": norm_of_grad(
-                losses.pnt_min_slipresistance, model, optimizer, p=pnorm
-            ),
-            "max_slipres": norm_of_grad(
-                losses.pnt_max_slipresistance, model, optimizer, p=pnorm
-            ),
+            "delta_gamma": norm_of_grad(losses.pnt_delta_gamma, model, optimizer, p=pnorm),
+            "min_slipres": norm_of_grad(losses.pnt_min_slipresistance, model, optimizer, p=pnorm),
+            "max_slipres": norm_of_grad(losses.pnt_max_slipresistance, model, optimizer, p=pnorm),
         },
         idx,
     )
@@ -110,7 +104,7 @@ def log_gradient_norm2(
     optimizer: optim.Optimizer,
     idx: int,
     losses: Losses,
-):
+) -> None:
     _log_gradient_norm(writer, model, optimizer, idx, losses, "GradNorm2", pnorm=2)
 
 
@@ -120,7 +114,7 @@ def log_gradient_norm1(
     optimizer: optim.Optimizer,
     idx: int,
     losses: Losses,
-):
+) -> None:
     _log_gradient_norm(writer, model, optimizer, idx, losses, "GradNorm1", pnorm=1)
 
 
@@ -130,10 +124,8 @@ def log_gradient_max(
     optimizer: optim.Optimizer,
     idx: int,
     losses: Losses,
-):
-    _log_gradient_norm(
-        writer, model, optimizer, idx, losses, "GradMax", pnorm=torch.inf
-    )
+) -> None:
+    _log_gradient_norm(writer, model, optimizer, idx, losses, "GradMax", pnorm=torch.inf)
 
 
 def log_params_hist(
@@ -142,7 +134,7 @@ def log_params_hist(
     optimizer: optim.Optimizer,
     loss: torch.Tensor,
     idx: int,
-):
+) -> None:
     optimizer.zero_grad()
     loss.backward(retain_graph=True)
     for name, param in model.named_parameters():
@@ -156,7 +148,7 @@ def log_errors(
     idx: int,
     losses: Losses,
     logger: Logger,
-):
+) -> None:
     if logger.should_log("loss"):
         log_losses(writer, idx, losses)
     if logger.should_log("grad_norm1"):

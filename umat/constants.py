@@ -1,3 +1,4 @@
+import pprint
 import numpy as np
 from dataclasses import dataclass
 
@@ -39,6 +40,9 @@ class FerriticPhaseConstants:
     # using the data of Franciosi (1983) for alpha-iron)
     # values: NGlide = 0.12
     NGlide = 1.2e-1
+
+    def __str__(self) -> str:
+        return pprint.pformat(vars(self))
 
 
 consts = FerriticPhaseConstants()

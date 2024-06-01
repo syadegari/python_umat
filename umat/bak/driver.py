@@ -21,7 +21,7 @@ def forward_pass(dgamma, ds, s0, beta0, F_p0, F1, slip_sys, elas_stif, dt):
     return r_I, r_II, F_p1, beta1
 
 
-def driver(F_final, n_steps, orientation):
+def driver(F_final, n_steps, orientation) -> None:
 
     f = lambda t: F_init + t * (F_final - F_init)
 

@@ -2,9 +2,10 @@ import numpy as np
 import torch
 from dataclasses import dataclass, field
 from torch.utils.data import Dataset, DataLoader, Sampler
+from typing import Optional, Sized, Tuple
 
 
-def getF(F_init, F_final, t):
+def getF(F_init: int, F_final, t: int):
     assert 0 <= t <= 1
     return (1 - t) * F_init + F_final * t
 
@@ -32,7 +33,7 @@ class Input:
     beta: torch.Tensor
     dtype: torch.dtype = field(default=torch.float64, init=True)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.F0 = torch.tensor(self.F0).to(self.dtype)
         self.F1 = torch.tensor(self.F1).to(self.dtype)
         self.Fp = torch.tensor(self.Fp).to(self.dtype)
@@ -48,7 +49,7 @@ class Output:
     slip_res: torch.Tensor
     dtype: torch.dtype = field(default=torch.float64, init=True)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.gamma = torch.tensor(self.gamma).to(self.dtype)
         self.slip_res = torch.tensor(self.slip_res).to(self.dtype)
 
@@ -113,7 +114,7 @@ def get_data(sims, ts, n, N):
     return F0, F1, theta, gamma0, gamma1, slip0, slip1, Fp0, beta0
 
 
-def make_batch(ns: list, sims, ts, N: int):
+def make_batch(ns: list, sims, ts, N: int) -> Tuple[Input, Output]:
     """
     this routine is called during the optimization loop and provides
     inputs (xs) and outputs (ys) for training as well as computation
@@ -163,10 +164,10 @@ def make_batch(ns: list, sims, ts, N: int):
 
 
 class SequenceDataset(Dataset):
-    def __init__(self, sequence):
+    def __init__(self, sequence) -> None:
         self.sequence = sequence
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.sequence)
 
     def __getitem__(self, idx):
@@ -174,7 +175,7 @@ class SequenceDataset(Dataset):
 
 
 class BatchSampler(Sampler):
-    def __init__(self, data_source, n_batch):
+    def __init__(self, data_source: Optional[Sized], n_batch) -> None:
         self.data_source = data_source
         self.n_batch = n_batch
 
@@ -186,5 +187,5 @@ class BatchSampler(Sampler):
         for i in range(0, total_samples, self.n_batch):
             yield indices[i : i + self.n_batch]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return (len(self.data_source) + self.n_batch - 1) // self.n_batch

@@ -14,30 +14,16 @@ from .umat import get_driving_force
 from .constants import consts
 from .dataloader import DataLoader, BatchSampler, SequenceDataset, make_batch
 from .logger import Logger, log_errors, Losses
+from .umat import get_rI, get_rII
 
 
-def get_rI(s0, s1, gamma0, gamma1, H_matrix):
-    return (s1 - s0) - H_matrix @ (gamma1 - gamma0)
-
-
-def get_rII(g1, s1, non_schmid_stress, gamma0, gamma1, gamma_dot_0, dt, pF):
-    return torch.where(
-        g1 > s1,
-        g1
-        - (s1 - non_schmid_stress) * ((gamma1 - gamma0) / (gamma_dot_0 * dt) + 1) ** pF,
-        gamma1 - gamma0,
-    )
-
-
-def train(params):
+def train(params) -> None:
     with open(params["sims_path"], "rb") as f:
         sims = pickle.load(f)
 
     writer = SummaryWriter(params["tboard_path"])
 
-    logger = Logger(
-        log_flags=params["log_flags"], log_frequencies=params["log_frequencies"]
-    )
+    logger = Logger(log_flags=params["log_flags"], log_frequencies=params["log_frequencies"])
     n_steps_per_sim = sims[0]["stress"].shape[0] - 1
     n_sims = len(sims)
     n_batch = params["n_batch"]
@@ -81,9 +67,7 @@ def train(params):
 
             clipped_slipres1_hat = torch.clip(slipres1_hat, consts.s0_F, consts.sInf_F)
             # ensures that dgamma >= 0.0
-            clipped_gamma1_hat = torch.where(
-                gamma1_hat >= vals0.gamma, gamma1_hat, vals0.gamma
-            )
+            clipped_gamma1_hat = torch.where(gamma1_hat >= vals0.gamma, gamma1_hat, vals0.gamma)
 
             # driving force g at n+1
             g1, H_matrix, non_schmid_stress = get_driving_force(
@@ -117,25 +101,15 @@ def train(params):
                 torch.tensor(n_batch * [dtime], dtype=torch.float64),
                 torch.tensor(n_batch * [consts.pExp_F], dtype=torch.float64),
             )
-            physics_loss = F.mse_loss(r_I, torch.zeros_like(r_I)) + F.mse_loss(
-                r_II, torch.zeros_like(r_II)
-            )
-            data_loss = F.mse_loss(gamma1_hat, vals1.gamma) + F.mse_loss(
-                slipres1_hat, vals1.slip_res
-            )
-            penalty_delta_gamma = torch.where(
-                gamma1_hat >= vals0.gamma, 0.0, vals0.gamma - gamma1_hat
-            )
+            physics_loss = F.mse_loss(r_I, torch.zeros_like(r_I)) + F.mse_loss(r_II, torch.zeros_like(r_II))
+            data_loss = F.mse_loss(gamma1_hat, vals1.gamma) + F.mse_loss(slipres1_hat, vals1.slip_res)
+            penalty_delta_gamma = torch.where(gamma1_hat >= vals0.gamma, 0.0, vals0.gamma - gamma1_hat)
 
             penalty_negative_gamma = torch.where(gamma1_hat > 0, 0.0, -gamma1_hat)
 
-            penalty_max_slipresistance = torch.where(
-                slipres1_hat <= consts.sInf_F, 0.0, slipres1_hat - consts.sInf_F
-            )
+            penalty_max_slipresistance = torch.where(slipres1_hat <= consts.sInf_F, 0.0, slipres1_hat - consts.sInf_F)
 
-            penalty_min_slipresistance = torch.where(
-                slipres1_hat >= consts.s0_F, 0.0, consts.s0_F - slipres1_hat
-            )
+            penalty_min_slipresistance = torch.where(slipres1_hat >= consts.s0_F, 0.0, consts.s0_F - slipres1_hat)
 
             log_errors(
                 writer,
@@ -146,12 +120,8 @@ def train(params):
                     data=data_loss,
                     physics=physics_loss,
                     pnt_delta_gamma=penalty_delta_gamma.norm(p=1, dim=1).mean(),
-                    pnt_min_slipresistance=penalty_min_slipresistance.norm(
-                        p=1, dim=1
-                    ).mean(),
-                    pnt_max_slipresistance=penalty_max_slipresistance.norm(
-                        p=1, dim=1
-                    ).mean(),
+                    pnt_min_slipresistance=penalty_min_slipresistance.norm(p=1, dim=1).mean(),
+                    pnt_max_slipresistance=penalty_max_slipresistance.norm(p=1, dim=1).mean(),
                 ),
                 logger=logger,
             )

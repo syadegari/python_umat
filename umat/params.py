@@ -2,11 +2,20 @@ import os
 import yaml
 import argparse
 import logging
-from typing import Union
+from typing import Dict, List, Optional, Type, Union
 import torch
 
 
-PARAMS_SCHEMA = {
+PARAMS_SCHEMA: Dict[
+    str,
+    Union[
+        Dict[str, Optional[str]],
+        Dict[str, Union[List[str], Type[str], str]],
+        Dict[str, Union[Type[float], str]],
+        Dict[str, Union[Type[int], str]],
+        Dict[str, Union[Type[str], str]],
+    ],
+] = {
     # weights for the loss
     "coeff_loss_data": {
         "type": float,
@@ -52,9 +61,7 @@ PARAMS_SCHEMA = {
     "log_frequencies": {
         "type": int,
         "nargs": "*",
-        "help": (
-            "List of frequencies corresponding to each log specified in 'log_flags'."
-        ),
+        "help": ("List of frequencies corresponding to each log specified in 'log_flags'."),
     },
     "tboard_path": {"type": str, "help": "Path for saving TensorBoard logs."},
     "sims_path": {"type": str, "help": "Path to the simulations."},
@@ -85,11 +92,11 @@ PARAMS_SCHEMA = {
 }
 
 
-def colorize(text, color_code):
+def colorize(text, color_code) -> str:
     return f"\033[{color_code}m{text}\033[0m"
 
 
-TYPE_COLOR_MAPPING = {
+TYPE_COLOR_MAPPING: Dict[Type[Union[float, str]], str] = {
     str: colorize("STR", "94"),  # Light blue
     float: colorize("FLOAT", "92"),  # Light green
     int: colorize("INT", "93"),  # Yellow
@@ -101,9 +108,7 @@ for key, value in PARAMS_SCHEMA.items():
         value["metavar"] = TYPE_COLOR_MAPPING.get(value["type"], value["type"])
 
 
-class HelpFormatter(
-    argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTypeHelpFormatter
-):
+class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.MetavarTypeHelpFormatter):
     def __init__(
         self,
         prog: str,
@@ -122,7 +127,7 @@ class WrongValueError(Exception):
     pass
 
 
-def check_params_values(params):
+def check_params_values(params) -> None:
     """
     parameters with choices should have valid subset of allowable values
     """
@@ -130,12 +135,10 @@ def check_params_values(params):
         if "choices" in PARAMS_SCHEMA[param_name]:
             if not set(params[param_name]) <= set(PARAMS_SCHEMA[param_name]["choices"]):
                 logging.error(f"Wrong value for {param_name}")
-                raise WrongValueError(
-                    f"Wrong value for {param_name}: {params[param_name]}"
-                )
+                raise WrongValueError(f"Wrong value for {param_name}: {params[param_name]}")
 
 
-def check_params_exist(params):
+def check_params_exist(params) -> None:
     """
     All the parameters in the SCHEMA should be specified at this point.
     """
@@ -147,7 +150,7 @@ def check_params_exist(params):
         return
 
 
-def check_logging_info(params):
+def check_logging_info(params) -> None:
     """
     Since for the logging we specify logging type and logging frequency,
     we check that all the specified loggings have frequency
