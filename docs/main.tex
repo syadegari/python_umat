@@ -12,6 +12,8 @@
 \setcounter{romanOne}{1}
 \setcounter{romanTwo}{2}
 \newcommand{\RNum}[1]{\mathrm{{\Roman{#1}}}}
+\newcommand{\bs}[1]{\boldsymbol{#1}}
+
 
 %% ------------------------------------------------
 %% headers for algorithm package
@@ -221,6 +223,18 @@ Not shown in this graph are all the constants factors and values from timestep $
     \label{fig:compu-graph}
 \end{figure}
 
+
+\begin{figure}
+    \include{comp_graph3.tex}
+    \caption{Graph of forward call of computed residuals. The nodes that indicate roots are highlighted with pale blue, 
+    while green indicates the leaf of the graph. To make the graph less populated 
+    and easier to read, we have assumed all quantities without a specified time step to be at the $n+1$ time step.
+    Quantities such as the orientation of the grain, which is used for rotating the slip systems and the elastic stiffness, 
+    as well as the deformation gradients at the end of the step, namely ${\bf F}_{n+1}$, are not shown in this graph.
+    }
+    \label{fig:compu-graph}
+\end{figure}
+
 % \begin{figure}[]
 %     \include{neuralnet.tex}
 %     \caption{Graph of forward call of computed residuals. The nodes that indicate roots are highlighted with pale blue, while green indicates the leaf of the graph.}
@@ -256,30 +270,30 @@ Not shown in this graph are all the constants factors and values from timestep $
 
 \begin{algorithm}
 \caption{Autoregressive Model Inference}
-\KwData{$F_{\text{final}}$ (Final deformation gradient), $\theta$ (Euler angles), $\alpha$ (Threshold value in $(0, 1)$), \texttt{path\_to\_model} (Path to the trained model)}
-\KwResult{Updated values of interest like $\gamma$, slip resistance, etc.}
+\KwData{${\bf F}_{\text{final}}$ (Final deformation gradient), $\theta$ (Euler angles), $\alpha$ (Threshold value in $(0, 1)$), \texttt{path\_to\_model} (Path to the trained model)}
+\KwResult{Updated values of interest like ${\bs \gamma}$, ${\bs s}$, etc.}
 
 \textbf{Initialization:} \\
 Model $\leftarrow$ Load from \texttt{path\_to\_model} \\
-$(\gamma, \text{slip\_resistance}, \text{stress}, \text{plastic\_def\_grad}, \beta) \leftarrow$ Initialize at $t=0$ \\
-$F_0 \leftarrow$ Identity matrix \\
+$({\bs \gamma}, {\bf s}, {\bs \sigma}, {\bf F}_p, \beta) \leftarrow$ Initialize at $t=0$ \\
+${\bf F}_0 \leftarrow$ Identity matrix \\
 $ts \leftarrow$ Generate pseudo-time vector from 0 to 1 \\
 
 \For{each $t_1$ in $ts$}{
-    $F_0$, $F_1$ $\leftarrow$ Compute deformation gradients for current time step $t_1$ \\
+    ${\bf F}_0$, ${\bf F}_1$ $\leftarrow$ Compute deformation gradients for current time step $t_1$ \\
 
     \eIf{$t_1 < \alpha$}{
-        $(\gamma_1, \text{slip\_res\_1}, \sigma_1) \leftarrow$ Compute using UMAT($t_1$, $F_0$, $F_1$) \\
+        $({\bf \gamma}_1, {\bf s}_1, {\bs \sigma}_1) \leftarrow$ Compute using UMAT($t_1$, ${\bf F}_0$, ${\bf F}_1$) \\
     }{
-        $(\gamma_1, \text{slip\_res\_1})$ $\leftarrow$ Predict using Model($\theta$, $F_0$, $F_1$, $\gamma_0$, \text{slip\_resistance$_0$}) \\
-        $F_{p_1} \leftarrow$ Compute plastic deformation gradient \\
-        $Fe_1 \leftarrow F_1 \times F_{p_1}^{-1}$ \\
-        $S_1 \leftarrow$ Get second Piola-Kirchhoff stress \\
-        $\sigma_1 \leftarrow$ Compute Cauchy stress \\
+        $({\bs \gamma}_1, {\bf s}_1)$ $\leftarrow$ Predict using Model($\theta$, ${\bf F}_0$, ${\bf F}_1$, ${\bs \gamma}_0$, ${\bf s}_0$) \\
+        $\left({\bf F}_p\right)_1 \leftarrow$ Compute plastic deformation gradient \\
+        $\left({\bf F}_e\right)_1 \leftarrow {\bf F}_1  \left({\bf F}_p\right)_1^{-1}$ \\
+        ${\bf S}_1 \leftarrow \mathbb{C}\left({\bf E}_e\right)_1$ \\
+        ${\bs \sigma}_1 \leftarrow$ Compute Cauchy stress \\
     }
 
-    Store values of interest: $\gamma_1$, \text{slip\_res\_1}, etc. \\
-    Update: $\gamma_0$, \text{slip\_resistance$_0$}, $F_0$ \\
+    Store values of interest: ${\bs \gamma}_1$, ${\bf s}_1$, etc. \\
+    Update: ${\bs \gamma}_0 \leftarrow {\bs \gamma}_1$, ${\bf s}_0 \leftarrow {\bf s}_1$, ${\bf F}_0 \leftarrow {\bf F}_1$ \\
 }
 \end{algorithm}
 
