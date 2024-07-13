@@ -51,7 +51,7 @@ class Ys:
 
 def weighted_mse_loss(
     x: Float[Tensor, "batch ..."],
-    y: Float[Tensor, "  batch ..."],
+    y: Float[Tensor, "batch ..."],
     weights: Float[Tensor, "batch ..."],
     normalize: bool = True,
 ) -> Tensor:
