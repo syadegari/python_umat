@@ -177,7 +177,7 @@ class LossFunction(nn.Module):
 
     def forward(
         self, ys: Ys, ys_hat: Ys, xs: Xs, weights: Float[Tensor, "batch"], cfg: Config
-    ) -> Tuple[Tensor, Float[ndarray, "batch"]]:
+    ) -> Tuple[Tensor, Float[ndarray, "batch"], dict]:
         # clipped_slipres1_hat = torch.clip(slipres1_hat, consts.s0_F, consts.sInf_F)
         #     # ensures that dgamma >= 0.0
         # clipped_gamma1_hat = torch.where(
@@ -268,4 +268,37 @@ class LossFunction(nn.Module):
                 + cfg.penalty_coeff_min_slipres * mean_abs_to_numpy(penalty_min_slipresistance)
             )
 
-        return loss, td_error
+        with torch.no_grad():
+            gamma_loss = weighted_mse_loss(ys_hat.gamma, ys.gamma, weights=torch.ones_like(ys_hat.gamma))
+            slipresistance_loss = weighted_mse_loss(
+                ys_hat.slip_resistance,
+                ys.slip_resistance,
+                weights=torch.ones_like(ys_hat.slip_resistance),
+            )
+            r_I_loss = weighted_mse_loss(r_I, torch.zeros_like(r_I), weights=torch.ones_like(r_I))
+            r_II_loss = weighted_mse_loss(r_II, torch.zeros_like(r_II), weights=torch.ones_like(r_II))
+
+            loss_dict_for_logging = {
+                "gamma": gamma_loss.item(),
+                "slipresistance": slipresistance_loss.item(),
+                "data": gamma_loss.item() + slipresistance_loss.item(),
+                "r_I": r_I_loss.item(),
+                "r_II": r_II_loss.item(),
+                "penalty_delta_gamma": weighted_mse_loss(
+                    penalty_delta_gamma,
+                    torch.zeros_like(penalty_delta_gamma),
+                    weights=torch.ones_like(penalty_delta_gamma),
+                ).item(),
+                "penalty_max_slipresistanc": weighted_mse_loss(
+                    penalty_max_slipresistance,
+                    torch.zeros_like(penalty_max_slipresistance),
+                    weights=torch.ones_like(penalty_max_slipresistance),
+                ).item(),
+                "penalty_min_slipresistance": weighted_mse_loss(
+                    penalty_min_slipresistance,
+                    torch.zeros_like(penalty_min_slipresistance),
+                    weights=torch.ones_like(penalty_min_slipresistance),
+                ).item(),
+            }
+
+        return loss, td_error, loss_dict_for_logging
