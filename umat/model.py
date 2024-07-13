@@ -227,9 +227,9 @@ class LossFunction(nn.Module):
         data_loss = weighted_mse_loss(ys_hat.gamma, ys.gamma, weights) + weighted_mse_loss(
             ys_hat.slip_resistance, ys.slip_resistance, weights
         )
-        physics_loss = weighted_mse_loss(r_I, torch.zeros_like(r_I), weights) + weighted_mse_loss(
-            r_II, torch.zeros_like(r_II), weights
-        )
+
+        residual_vector: Tensor[Float, "batch 48"] = torch.cat([r_I, r_II], dim=1)
+        physics_loss = weighted_mse_loss(residual_vector, torch.zeros_like(residual_vector), weights)
 
         if torch.isnan(physics_loss):
             physics_loss = torch.tensor([0.0], dtype=torch.float64)
