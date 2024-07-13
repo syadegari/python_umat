@@ -260,7 +260,7 @@ class LossFunction(nn.Module):
             if np.isnan(td_error_physics).any():
                 td_error_physics = np.zeros_like(td_error_physics)
 
-            td_error = (
+            td_error: Float[ndarray, "batch"] = (
                 cfg.coeff_data * td_error_data
                 + cfg.coeff_physics * td_error_physics
                 + cfg.penalty_coeff_delta_gamma * mean_abs_to_numpy(penalty_delta_gamma)
