@@ -137,15 +137,6 @@ def rotate_slip_system(
         rotation_matrix,
     )
 
-def grain_orientation_bcc(ElasStif, SlipSys, angles: Tensor) -> Tuple[Tensor, Tensor]:
-    """rotates the stiffness and slip systems with the calculated rotation matrix"""
-    rm = rotation_matrix(angles)
-    #
-    rotated_slip_system = torch.einsum("kab,ia,jb->kij", SlipSys.to(rm.dtype), rm, rm)
-    #
-    rotated_elas_stiffness = torch.einsum("abcd,ia,jb,kc,ld->ijkl", ElasStif.to(rm.dtype), rm, rm, rm, rm)
-    #
-    return rotated_slip_system, rotated_elas_stiffness
 
 def rotate_elastic_stiffness(
     elastic_stiffness: Float[Tensor, "3 3 3 3"], rotation_matrix: Float[Tensor, "3 3"]
@@ -153,8 +144,6 @@ def rotate_elastic_stiffness(
     """
     Rotate elastic stiffness tensor according to the given rotation matrix.
 
-def material_properties_bcc(angles: Tensor) -> Tuple[Tensor, Tensor]:
-    return grain_orientation_bcc(ElasStif, SlipSys, angles)
     Note:
     When vmapping this function over a batched rotation matrix with unrotated elastif stiffness
     ElasStif from `trip_ferrite_data.py`, we have two choices:
