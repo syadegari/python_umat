@@ -108,10 +108,10 @@ def circular_loader(loader: DataLoader) -> Iterator:
     Infinite loop over the data
 
     Example:
-        circular_train_loader = circular_loader(train_loader)
-        for data in circular_train_loader:
-            defgrad_batch = data['defgrad']
-            angle_batch = data['angle']
+       >>> circular_train_loader = circular_loader(train_loader)
+       >>> for data in circular_train_loader:
+       >>>     defgrad_batch = data['defgrad']
+       >>>     angle_batch = data['angle']
     """
     while True:
         for data in loader:
