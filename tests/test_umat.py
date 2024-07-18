@@ -241,6 +241,64 @@ class TestElasticStiffnessRotation(BaseTest):
         )
         assert_vmapped_results(rotated_elastic_stiffness_list, rotated_elastic_stiffness_vmapped)
 
+
+class TestNonSchmidtStress(BaseTest):
+    """
+    The function that implements the calculation of non-Schmidt stress has a lot of
+    inplace operations. Make sure that it works in batch mode with vmap.
+    """
+
+    def _non_schmid_stress_bcc_simple(self, Schmid: Float[Tensor, "24"]) -> Float[Tensor, "24"]:
+        """
+        Computes non-Schmid stress according to Bassani's convention.
+        This used to be the original function, but it turned out using an indexing is
+        5 times faster than the current implementation. We keep this here for checking
+        the validity of the new implementation.
+        """
+        NonSchmid = torch.zeros_like(Schmid)
+        # compute the non-glide stress (non-Schmid stress)
+        NonSchmid[0] = Schmid[5]  #      NonSchmid(1)  = NGlide*Schmid(6)
+        NonSchmid[1] = Schmid[2]  #      NonSchmid(2)  = NGlide*Schmid(3)
+        NonSchmid[2] = Schmid[1]  #      NonSchmid(3)  = NGlide*Schmid(2)
+        NonSchmid[3] = Schmid[4]  #      NonSchmid(4)  = NGlide*Schmid(5)
+        NonSchmid[4] = Schmid[3]  #      NonSchmid(5)  = NGlide*Schmid(4)
+        NonSchmid[5] = Schmid[0]  #      NonSchmid(6)  = NGlide*Schmid(1)
+        #
+        NonSchmid[6] = Schmid[9]  #      NonSchmid(7)  = NGlide*Schmid(10)
+        NonSchmid[7] = Schmid[10]  #      NonSchmid(8)  = NGlide*Schmid(11)
+        NonSchmid[8] = Schmid[11]  #      NonSchmid(9)  = NGlide*Schmid(12)
+        NonSchmid[9] = Schmid[6]  #      NonSchmid(10) = NGlide*Schmid(7)
+        NonSchmid[10] = Schmid[7]  #      NonSchmid(11) = NGlide*Schmid(8)
+        NonSchmid[11] = Schmid[8]  #      NonSchmid(12) = NGlide*Schmid(9)
+        #
+        NonSchmid[12] = Schmid[15]  #      NonSchmid(13) = NGlide*Schmid(16)
+        NonSchmid[13] = Schmid[16]  #      NonSchmid(14) = NGlide*Schmid(17)
+        NonSchmid[14] = Schmid[17]  #      NonSchmid(15) = NGlide*Schmid(18)
+        NonSchmid[15] = Schmid[12]  #      NonSchmid(16) = NGlide*Schmid(13)
+        NonSchmid[16] = Schmid[13]  #      NonSchmid(17) = NGlide*Schmid(14)
+        NonSchmid[17] = Schmid[14]  #      NonSchmid(18) = NGlide*Schmid(15)
+        #
+        NonSchmid[18] = Schmid[23]  #      NonSchmid(19) = NGlide*Schmid(24)
+        NonSchmid[19] = Schmid[20]  #      NonSchmid(20) = NGlide*Schmid(21)
+        NonSchmid[20] = Schmid[19]  #      NonSchmid(21) = NGlide*Schmid(20)
+        NonSchmid[21] = Schmid[22]  #      NonSchmid(22) = NGlide*Schmid(23)
+        NonSchmid[22] = Schmid[21]  #      NonSchmid(23) = NGlide*Schmid(22)
+        NonSchmid[23] = Schmid[18]  #      NonSchmid(24) = NGlide*Schmid(19)
+        #
+        return consts.NGlide * NonSchmid
+
+    def test_non_schmidt_stress_function_can_be_vmapped(self):
+        t1 = torch.rand(24)
+        t2 = torch.rand(24)
+        ts = rearrange([t1, t2], "b ... -> b ...")
+
+        nonSchmidtStress1 = self._non_schmid_stress_bcc_simple(t1)
+        nonSchmidtStress2 = self._non_schmid_stress_bcc_simple(t2)
+        nonSchmidtStresses_vmap = vmap(umat.non_schmid_stress_bcc)(ts)
+
+        assert_vmapped_results([nonSchmidtStress1, nonSchmidtStress2], nonSchmidtStresses_vmap)
+
+
 class TestElasticDefGradient(unittest.TestCase):
     """
     This quantity is a simple matrix multiplication and inversion, since we have the
