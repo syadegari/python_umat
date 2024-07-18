@@ -17,7 +17,12 @@ from .umat import (
     get_penalty_delta_gamma,
     get_penalty_max_slip_resistance,
     get_penalty_min_slip_resistance,
+    rotation_matrix,
+    rotate_elastic_stiffness,
+    rotate_slip_system,
+    get_driving_force,
 )
+from .trip_ferrite_data import ElasStif, SlipSys
 from .constants import consts
 
 from jaxtyping import Float, Int
@@ -189,15 +194,20 @@ class LossFunction(nn.Module):
         # ensures that gamma1 >= gamma0
         gamma1_hat = enforce_positive_gamma_increment(ys_hat.gamma, xs.gamma)
 
-        g1, H_matrix, non_schmid_stress = get_driving_force(
-            slip_resistance0=xs.slip_resistance,
-            slip_resistance1=clipped_slipres1_hat,
-            delta_gamma=gamma1_hat - xs.gamma,
-            beta0=xs.beta,
-            Fp0=xs.plastic_defgrad.reshape(-1, 3, 3),
-            theta=xs.theta,
-            F1=xs.defgrad1.reshape(-1, 3, 3),
+        rms = vmap(rotation_matrix)(xs.theta)
+        rotated_slip_systems = vmap(rotate_slip_system, in_dims=(None, 0))(SlipSys, rms)
+        rotated_elastic_stiffnesses = vmap(rotate_elastic_stiffness, in_dims=(None, 0))(ElasStif, rms)
+        g1, H_matrix, non_schmid_stress = vmap(get_driving_force)(
+            rotated_slip_systems,
+            rotated_elastic_stiffnesses,
+            xs.slip_resistance,
+            clipped_slipres1_hat,
+            gamma1_hat - xs.gamma,
+            xs.beta,
+            xs.plastic_defgrad.reshape(-1, 3, 3),
+            xs.defgrad1.reshape(-1, 3, 3),
         )
+
         r_I = vmap(get_rI)(
             xs.slip_resistance,
             # clip s1 to be between min and max
@@ -207,6 +217,7 @@ class LossFunction(nn.Module):
             gamma1_hat,
             H_matrix,
         )
+
         r_II = vmap(get_rII)(
             g1,
             # clip s1 to be between min and max
