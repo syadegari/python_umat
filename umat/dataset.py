@@ -14,16 +14,16 @@ from typing import Any, Dict, Iterator
 def read_hdf5(path: str) -> dict:
     data = {}
 
-    fh = h5py.File(path, "r")
-    data_pairs = fh["data_pairs"]
+    with h5py.File(path, "r") as fh:
+        data_pairs = fh["data_pairs"]
 
-    idx = 0
-    for key in data_pairs:
-        if isinstance(data_pairs[key], h5py.Group):
-            angle = data_pairs[key]["angle"][:]
-            defgrad = data_pairs[key]["defgrad"][:]
-            data[idx] = {"angle": angle, "defgrad": defgrad}
-            idx += 1
+        idx = 0
+        for key in data_pairs:
+            if isinstance(data_pairs[key], h5py.Group):
+                angle = data_pairs[key]["angle"][:]
+                defgrad = data_pairs[key]["defgrad"][:]
+                data[idx] = {"angle": angle, "defgrad": defgrad}
+                idx += 1
 
     return data
 
