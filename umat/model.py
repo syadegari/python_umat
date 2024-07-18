@@ -222,7 +222,7 @@ class LossFunction(nn.Module):
 
         penalty_delta_gamma = get_penalty_delta_gamma(ys_hat.gamma, xs.gamma)
         penalty_max_slipresistance = get_penalty_max_slip_resistance(ys_hat.slip_resistance)
-        penalty_min_slipresistance = get_penalty_min_slip_resistance(ys_hat.slip_resistance)
+        penalty_min_slipresistance = get_penalty_min_slip_resistance(ys_hat.slip_resistance, xs.slip_resistance)
 
         data_loss = weighted_mse_loss(ys_hat.gamma, ys.gamma, weights) + weighted_mse_loss(
             ys_hat.slip_resistance, ys.slip_resistance, weights

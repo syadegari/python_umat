@@ -283,9 +283,9 @@ def get_penalty_max_slip_resistance(slip_resistance: Tensor) -> Tensor:
     return torch.where(delta_to_upper_value >= 0, 0.0, -delta_to_upper_value)
 
 
-def get_penalty_min_slip_resistance(slip_resistance: Tensor) -> Tensor:
-    """Penalty in case slip resistance is less than s_0_F"""
-    delta_to_lower_value = slip_resistance - consts.s0_F
+def get_penalty_min_slip_resistance(slip_resistance: Tensor, slip_resistance0: Tensor) -> Tensor:
+    """Penalty in case slip resistance is less than s0"""
+    delta_to_lower_value = slip_resistance - slip_resistance0
     return torch.where(delta_to_lower_value >= 0, 0.0, -delta_to_lower_value)
 
 
