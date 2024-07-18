@@ -41,6 +41,18 @@ def simulate(data: dict[str, Float[Tensor, "batch_dim ..."]], n_times: int = 400
 pairwise = lambda xs: zip(xs[:-1], xs[1:])
 
 
+def parse_umat_output(umat_result: UMATResult) -> list[State]:
+    Ns = umat_result.ts.shape[0]
+    intvar_indices = IntVarIndices()
+
+    states = []
+    for n in range(Ns):
+        state = make_state(umat_result, intvar_indices, n)
+        states.append(state)
+
+    return states
+
+
 def make_state(result: UMATResult, intvar_indices: IntVarIndices, step: int) -> State:
     return State(
         total_defgrad=result.F_final.reshape(1, -1).copy(),
