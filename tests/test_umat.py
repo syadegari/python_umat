@@ -8,6 +8,9 @@ from umat.constants import consts
 from umat.trip_ferrite_data import SlipSys, ElasStif
 import umat.umat as umat
 
+# typing
+from torch import Tensor
+from jaxtyping import Float
 
 """
 This module contains tests with the following objectives:
@@ -27,6 +30,15 @@ containt one or more of the following types of tests:
   in the `umat` module) produces equivalent results.
   - `batch`: Ensures that the formula functions correctly in batch mode.
 """
+
+
+def assert_vmapped_results(ts: list[Tensor], vmap_result: Float[Tensor, "b ..."]) -> None:
+    """
+    Assume we have a function `fn` we wanna test for vmap correctness.
+    `ts` is a list of tensors computed by `fn`
+    `vmap_result` is the result of same inputs computed using vmap(fn)
+    """
+    torch.testing.assert_close(rearrange(ts, "b ... -> b ..."), vmap_result)
 
 
 def generate_random_orientation():
