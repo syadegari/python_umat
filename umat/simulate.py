@@ -7,6 +7,7 @@ import numpy as np
 import torch.nn as nn
 
 # Module imports
+from umat.lr_scheduler import CustomCosineAnnealingWarmRestarts
 from .get_results import get_results_with_state, UMATResult
 from .replay_buffer import PriotorizedReplayBuffer, SampledValues
 from .dataset import read_hdf5, UMATDataSet, split_dataset, create_data_loaders, circular_loader
@@ -19,6 +20,7 @@ from torch.optim import Optimizer
 from typing import Tuple
 from jaxtyping import Float
 from torch import Tensor
+from torch.optim.lr_scheduler import _LRScheduler
 
 
 def simulate(data: dict[str, Float[Tensor, "batch_dim ..."]], n_times: int = 400) -> list[UMATResult]:
@@ -88,10 +90,14 @@ def update_buffer(circular_train_loader, buffer: PriotorizedReplayBuffer, cfg: C
     add_result_to_buffer(result, buffer)
 
 
-def train_model(loss: LossFunction, optimizer: Optimizer) -> None:
+def train_model(loss: LossFunction, optimizer: Optimizer, scheduler: _LRScheduler = None) -> None:
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
+    if scheduler is not None:
+        scheduler.step()
+
+
 
 
 def train(cfg: Config) -> None:
@@ -104,7 +110,20 @@ def train(cfg: Config) -> None:
     buffer = PriotorizedReplayBuffer(cfg.buffer_size, cfg.batch_size, 101, n_total_steps=cfg.N_iteration)
     model = Model(nn.Tanh()).to(torch.float64)
     optimizer = torch.optim.Adam(model.parameters(), cfg.lr)
-
+    #
+    if cfg.use_lr_scheduler:
+        scheduler = CustomCosineAnnealingWarmRestarts(
+            optimizer,
+            T_0=cfg.lr_scheduler_T_0,
+            T_mult=cfg.lr_scheduler_T_multi,
+            eta_min=cfg.lr_scheduler_eta_min,
+            initial_lr=cfg.lr_scheduler_initial_lr,
+            final_lr=cfg.lt_scheduler_final_lr,
+            restarts_until_final=10,
+        )
+    else:
+        scheduler = None
+    #
     loss_fn = LossFunction()
 
     n_step = 0
