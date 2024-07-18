@@ -255,7 +255,7 @@ def get_rI(s0, s1, gamma0, gamma1, H_matrix):
 
 def get_rII(g1, s1, non_schmid_stress, gamma0, gamma1, gamma_dot_0, dt, pF) -> Tensor:
     return torch.where(
-        g1 > s1,
+        g1 > s1 - non_schmid_stress,
         g1 - (s1 - non_schmid_stress) * ((gamma1 - gamma0) / (gamma_dot_0 * dt) + 1) ** pF,
         gamma1 - gamma0,
     )
