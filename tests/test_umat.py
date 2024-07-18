@@ -76,6 +76,171 @@ class BaseTest(unittest.TestCase):
         self.consts = consts
 
 
+class TestRotationMatrix(BaseTest):
+    """
+    This test is for making sure that the rewrite of rotation matrix works the same
+    as the one we have used so far. Up to this point, we had to use a function that
+    was doing the vmapping of the function internally. To simplify the usage, for
+    both the batched and non-batched quantities, we want to rewrite the rotation matrix
+    in a way that it can be vmapped. Problem with this particular function is that
+    vmap does not allow for in-place operations such as the followings:
+        ```
+        R1 = torch.zeros([3, 3]).to(angles.dtype)
+        ...
+        R1[0, 0] = torch.cos(angle1)
+        R1[0, 1] = torch.sin(angle1)
+        R1[1, 0] = -torch.sin(angle1)
+        R1[1, 1] = torch.cos(angle1)
+        R1[2, 2] = 1.0
+        ```
+
+    or even this version:
+        ```
+         R1 = torch.tensor([
+        [torch.cos(angle1),  torch.sin(angle1), 0],
+        [-torch.sin(angle1), torch.cos(angle1), 0],
+        [0, 0, 1.0]], dtype=angles.dtype)
+        ```
+
+    this test, therefore, tries to make sure that the new implementation, which
+    gives is a bit less readable but vmappable, gives the exact same result as the
+    old formulation. We preserve the old formulation here for documentation named
+    `_old_non_vmappable_rotation_matrix`. I emphasize once more that this formulation
+    only flaw is that it cannot be vmapped.
+    """
+
+    def _old_non_vmappable_rotation_matrix(self, angles: Float[Tensor, "3"]) -> Float[Tensor, "3 3"]:
+        """
+        Readble but non-vmappable version of the rotation matrix.
+        """
+
+        angle1, angle2, angle3 = angles[0], angles[1], angles[2]
+
+        R1 = torch.zeros([3, 3]).to(angles.dtype)
+        R2 = torch.zeros([3, 3]).to(angles.dtype)
+        R3 = torch.zeros([3, 3]).to(angles.dtype)
+
+        #  rotation matrix of the second rotation (angle1)
+        R1[0, 0] = torch.cos(angle1)
+        R1[0, 1] = torch.sin(angle1)
+        R1[1, 0] = -torch.sin(angle1)
+        R1[1, 1] = torch.cos(angle1)
+        R1[2, 2] = 1.0
+
+        #  rotation matrix of the second rotation (angle2)
+        R2[0, 0] = torch.cos(angle2)
+        R2[0, 2] = -torch.sin(angle2)
+        R2[1, 1] = 1.0
+        R2[2, 0] = torch.sin(angle2)
+        R2[2, 2] = torch.cos(angle2)
+
+        #  rotation matrix of the third rotation (angle3)
+        R3[0, 0] = torch.cos(angle3)
+        R3[0, 1] = torch.sin(angle3)
+        R3[1, 0] = -torch.sin(angle3)
+        R3[1, 1] = torch.cos(angle3)
+        R3[2, 2] = 1.0
+
+        #  calculate the overall rotation matrix
+        RM = R3 @ R2 @ R1
+
+        return RM
+
+    def test_rotation_matrix_shape(self):
+        orientation_1 = generate_random_orientation()
+        orientation_2 = generate_random_orientation()
+        rm1 = umat.rotation_matrix(orientation_1)
+        assert rm1.shape == torch.Size([3, 3]), rm1.shape
+
+        orientations = rearrange([orientation_1, orientation_2], "b ... -> b ...")
+        rms = vmap(umat.rotation_matrix)(orientations)
+        assert rms.shape == torch.Size([2, 3, 3]), rms.shape
+
+    def test_rotation_matrix_can_be_vmapped(self):
+        """
+        Make sure that the function works as expected in batch mode under `vmap` for a
+        ealistic value of batch_size.
+        """
+        batch_size = 512
+        orientation_list = [generate_random_orientation() for _ in range(batch_size)]
+        orientations = rearrange(orientation_list, "b ... -> b ...")
+
+        rm_list = [umat.rotation_matrix(orientation) for orientation in orientation_list]
+        rm_vmapped = vmap(umat.rotation_matrix)(orientations)
+
+        assert_vmapped_results(rm_list, rm_vmapped)
+
+
+class TestSlipSystemRotation(BaseTest):
+    """
+    Make sure that the function works as expected in batch mode under `vmap`
+    """
+
+    def test_slip_system_rotation_shape(self):
+        orientation_1 = generate_random_orientation()
+        orientation_2 = generate_random_orientation()
+        rm1 = umat.rotation_matrix(orientation_1)
+        rotated_slip_system = umat.rotate_slip_system(SlipSys, rm1)
+        assert rotated_slip_system.shape == torch.Size([24, 3, 3])
+
+        orientations = rearrange([orientation_1, orientation_2], "b ... -> b ...")
+        rms_vmapped = vmap(umat.rotation_matrix)(orientations)
+        rotated_slip_systems = vmap(umat.rotate_slip_system, in_dims=(None, 0))(SlipSys, rms_vmapped)
+        assert rotated_slip_systems.shape == torch.Size([2, 24, 3, 3])
+
+    def test_slip_system_rotation_can_be_vmapped(self):
+        """
+        Make sure that the function works as expected in batch mode under `vmap` for a
+        ealistic value of batch_size.
+        """
+        batch_size = 512
+        orientation_list = [generate_random_orientation() for _ in range(batch_size)]
+        rm_list = [umat.rotation_matrix(orientation) for orientation in orientation_list]
+        orientations = rearrange(orientation_list, "b ... -> b ...")
+        rms_vmapped = vmap(umat.rotation_matrix)(orientations)
+
+        rotated_slip_system_list = [umat.rotate_slip_system(SlipSys, rm) for rm in rm_list]
+        rotated_slip_system_vmapped = vmap(umat.rotate_slip_system, in_dims=(None, 0))(SlipSys, rms_vmapped)
+
+        assert_vmapped_results(rotated_slip_system_list, rotated_slip_system_vmapped)
+
+
+class TestElasticStiffnessRotation(BaseTest):
+    """
+    Make sure that the function works as expected in batch mode under `vmap`
+    """
+
+    def test_elastic_stiffness_rotation_shape(self):
+        orientation_1 = generate_random_orientation()
+        orientation_2 = generate_random_orientation()
+        rm1 = umat.rotation_matrix(orientation_1)
+        rotated_elastic_stiffness = umat.rotate_elastic_stiffness(ElasStif, rm1)
+        assert rotated_elastic_stiffness.shape == torch.Size([3, 3, 3, 3])
+
+        orientations = rearrange([orientation_1, orientation_2], "b ... -> b ...")
+        rms_vmapped = vmap(umat.rotation_matrix)(orientations)
+        rotated_elastic_stiffness_vmapped = vmap(umat.rotate_elastic_stiffness, in_dims=(None, 0))(
+            ElasStif, rms_vmapped
+        )
+        assert rotated_elastic_stiffness_vmapped.shape == torch.Size([2, 3, 3, 3, 3])
+
+    def test_elastic_stiffness_rotation_can_be_vmapped(self):
+        """
+        Make sure that the function works as expected in batch mode under `vmap` for a
+        ealistic value of batch_size.
+        """
+        batch_size = 512
+        orientation_list = [generate_random_orientation() for _ in range(batch_size)]
+        rm_list = [umat.rotation_matrix(orientation) for orientation in orientation_list]
+        orientations = rearrange(orientation_list, "b ... -> b ...")
+        rms_vmapped = vmap(umat.rotation_matrix)(orientations)
+
+        rotated_elastic_stiffness_list = [umat.rotate_elastic_stiffness(ElasStif, rm) for rm in rm_list]
+        rotated_elastic_stiffness_vmapped = vmap(umat.rotate_elastic_stiffness, in_dims=(None, 0))(
+            ElasStif, rms_vmapped
+        )
+        assert_vmapped_results(rotated_elastic_stiffness_list, rotated_elastic_stiffness_vmapped)
+
 class TestElasticDefGradient(unittest.TestCase):
     """
     This quantity is a simple matrix multiplication and inversion, since we have the
@@ -487,30 +652,6 @@ class TestSlipHardeningModulus(BaseTest):
                 "b ... -> b ...",
             ),
         )
-
-
-class TestRotateSlipSystem(unittest.TestCase):
-    def test_rotate_slip_system_batch(self):
-        rotation_matrix = torch.rand(2, 3, 3)
-        rotation_matrix1, rotation_matrix2 = rotation_matrix
-
-        res = umat.rotate_slip_system(SlipSys, rotation_matrix)
-        res1 = umat.rotate_slip_system(SlipSys, rotation_matrix1)
-        res2 = umat.rotate_slip_system(SlipSys, rotation_matrix2)
-
-        torch.testing.assert_close(res, rearrange([res1, res2], "b ... -> b ..."))
-
-
-class TestRotateElasticStiffness(unittest.TestCase):
-    def test_elastic_stiffness_batch(self):
-        rotation_matrix = torch.rand(2, 3, 3)
-        rotation_matrix1, rotation_matrix2 = rotation_matrix
-
-        res = umat.rotate_elastic_stiffness(ElasStif, rotation_matrix)
-        res1 = umat.rotate_elastic_stiffness(ElasStif, rotation_matrix1)
-        res2 = umat.rotate_elastic_stiffness(ElasStif, rotation_matrix2)
-
-        torch.testing.assert_close(res, rearrange([res1, res2], "b ... -> b ..."))
 
 
 class TestMisc(unittest.TestCase):

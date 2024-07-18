@@ -83,119 +83,81 @@ def non_schmid_stress_bcc(Schmid: Tensor) -> Tensor:
     return consts.NGlide * NonSchmid
 
 
-def rotation_matrix(
-    angles: Union[Float[Tensor, "3"], Float[Tensor, "b 3"]],
-) -> Union[Float[Tensor, "3 3"], Float[Tensor, "b 3 3"]]:
+def rotation_matrix(angles: Float[Tensor, "3"]) -> Float[Tensor, "3 3"]:
     """
-    Defines the rotation matrix using 323 euler rotations.
+    Defines the rotation matrix using 323 Euler rotations.
     This is the replica of the Fortran-version. It has been
-    modified to be batch-compatible.
+    modified to be batch-compatible and usable with vmap.
+
+    See the tests section for further explanation and the testing.
     """
+    angle1, angle2, angle3 = angles[0], angles[1], angles[2]
 
-    was_singleton = False
-    if angles.ndim == 1:
-        angles = angles.unsqueeze(0)
-        was_singleton = True
+    # Rotation matrix of the first rotation (angle1)
+    R1 = torch.stack(
+        [
+            torch.stack([torch.cos(angle1), torch.sin(angle1), torch.tensor(0.0, dtype=angles.dtype)]),
+            torch.stack([-torch.sin(angle1), torch.cos(angle1), torch.tensor(0.0, dtype=angles.dtype)]),
+            torch.stack(
+                [
+                    torch.tensor(0.0, dtype=angles.dtype),
+                    torch.tensor(0.0, dtype=angles.dtype),
+                    torch.tensor(1.0, dtype=angles.dtype),
+                ]
+            ),
+        ]
+    )
 
-    batch_size = angles.shape[0]
+    # Rotation matrix of the second rotation (angle2)
+    R2 = torch.stack(
+        [
+            torch.stack([torch.cos(angle2), torch.tensor(0.0, dtype=angles.dtype), -torch.sin(angle2)]),
+            torch.stack(
+                [
+                    torch.tensor(0.0, dtype=angles.dtype),
+                    torch.tensor(1.0, dtype=angles.dtype),
+                    torch.tensor(0.0, dtype=angles.dtype),
+                ]
+            ),
+            torch.stack([torch.sin(angle2), torch.tensor(0.0, dtype=angles.dtype), torch.cos(angle2)]),
+        ]
+    )
 
-    angle1, angle2, angle3 = angles[:, 0], angles[:, 1], angles[:, 2]
+    # Rotation matrix of the third rotation (angle3)
+    R3 = torch.stack(
+        [
+            torch.stack([torch.cos(angle3), torch.sin(angle3), torch.tensor(0.0, dtype=angles.dtype)]),
+            torch.stack([-torch.sin(angle3), torch.cos(angle3), torch.tensor(0.0, dtype=angles.dtype)]),
+            torch.stack(
+                [
+                    torch.tensor(0.0, dtype=angles.dtype),
+                    torch.tensor(0.0, dtype=angles.dtype),
+                    torch.tensor(1.0, dtype=angles.dtype),
+                ]
+            ),
+        ]
+    )
 
-    R1 = torch.zeros([batch_size, 3, 3]).to(angles.dtype)
-    R2 = torch.zeros([batch_size, 3, 3]).to(angles.dtype)
-    R3 = torch.zeros([batch_size, 3, 3]).to(angles.dtype)
-
-    #  rotation matrix of the second rotation (angle1)
-    R1[:, 0, 0] = torch.cos(angle1)
-    R1[:, 0, 1] = torch.sin(angle1)
-    R1[:, 1, 0] = -torch.sin(angle1)
-    R1[:, 1, 1] = torch.cos(angle1)
-    R1[:, 2, 2] = 1.0
-
-    #  rotation matrix of the second rotation (angle2)
-    R2[:, 0, 0] = torch.cos(angle2)
-    R2[:, 0, 2] = -torch.sin(angle2)
-    R2[:, 1, 1] = 1.0
-    R2[:, 2, 0] = torch.sin(angle2)
-    R2[:, 2, 2] = torch.cos(angle2)
-
-    #  rotation matrix of the third rotation (angle3)
-    R3[:, 0, 0] = torch.cos(angle3)
-    R3[:, 0, 1] = torch.sin(angle3)
-    R3[:, 1, 0] = -torch.sin(angle3)
-    R3[:, 1, 1] = torch.cos(angle3)
-    R3[:, 2, 2] = 1.0
-
-    #  calculate the overall rotation matrix
+    # Calculate the overall rotation matrix
     RM = R3 @ R2 @ R1
-
-    if was_singleton:
-        RM = RM.squeeze(0)
 
     return RM
 
 
 def rotate_slip_system(
-    slip_sys: Float[Tensor, "3 3 3"],
-    rotation_matrix: Union[Float[Tensor, "3 3"], Float[Tensor, "b 3 3"]],
-) -> Union[Float[Tensor, "3 3 3"], Float[Tensor, "b 3 3 3"]]:
-    if rotation_matrix.ndim == 2:
-        return torch.einsum(
-            "kab, ia, jb -> kij",
-            slip_sys.to(rotation_matrix.dtype),
-            rotation_matrix,
-            rotation_matrix,
-        )
-    elif rotation_matrix.ndim == 3:
-        batch_dim = rotation_matrix.shape[0]
-        return torch.einsum(
-            "Bkab, Bia, Bjb -> Bkij",
-            einops.repeat(
-                slip_sys.to(rotation_matrix.dtype),
-                "... -> b ...",
-                b=batch_dim,
-            ),
-            rotation_matrix,
-            rotation_matrix,
-        )
-    else:
-        raise ValueError(
-            "Expected input tensor 'rotation_matrix' of rank 2 or 3, but got" f" rank {rotation_matrix.ndim}."
-        )
+    slip_sys: Float[Tensor, "3 3 3"], rotation_matrix: Float[Tensor, "3 3"]
+) -> Float[Tensor, "3 3 3"]:
+    """
+    Rotate elastic stiffness tensor according to the given rotation matrix.
 
-
-def rotate_elastic_stiffness(
-    elastic_stiffness: Float[Tensor, "3 3 3 3"],
-    rotation_matrix: Union[Float[Tensor, "3 3"], Float[Tensor, "b 3 3"]],
-) -> Union[Float[Tensor, "3 3 3 3"], Float[Tensor, "b 3 3 3 3"]]:
-    if rotation_matrix.ndim == 2:
-        return torch.einsum(
-            "abcd, ia, jb, kc, ld -> ijkl",
-            elastic_stiffness.to(rotation_matrix.dtype),
-            rotation_matrix,
-            rotation_matrix,
-            rotation_matrix,
-            rotation_matrix,
-        )
-    elif rotation_matrix.ndim == 3:
-        batch_dim = rotation_matrix.shape[0]
-        return torch.einsum(
-            "Babcd, Bia, Bjb, Bkc, Bld -> Bijkl",
-            einops.repeat(
-                elastic_stiffness.to(rotation_matrix.dtype),
-                "... -> b ...",
-                b=batch_dim,
-            ),
-            rotation_matrix,
-            rotation_matrix,
-            rotation_matrix,
-            rotation_matrix,
-        )
-    else:
-        raise ValueError(
-            "Expected input tensor 'rotation_matrix' of rank 2 or 3, but got" f" rank {rotation_matrix.ndim}."
-        )
-
+    Refer to the note in `rotate_elastic_stiffness_singleton` for usage with `vmap`.
+    """
+    return torch.einsum(
+        "kab, ia, jb -> kij",
+        slip_sys.to(rotation_matrix.dtype),
+        rotation_matrix,
+        rotation_matrix,
+    )
 
 def grain_orientation_bcc(ElasStif, SlipSys, angles: Tensor) -> Tuple[Tensor, Tensor]:
     """rotates the stiffness and slip systems with the calculated rotation matrix"""
@@ -207,9 +169,34 @@ def grain_orientation_bcc(ElasStif, SlipSys, angles: Tensor) -> Tuple[Tensor, Te
     #
     return rotated_slip_system, rotated_elas_stiffness
 
+def rotate_elastic_stiffness(
+    elastic_stiffness: Float[Tensor, "3 3 3 3"], rotation_matrix: Float[Tensor, "3 3"]
+) -> Float[Tensor, "3 3 3 3"]:
+    """
+    Rotate elastic stiffness tensor according to the given rotation matrix.
 
 def material_properties_bcc(angles: Tensor) -> Tuple[Tensor, Tensor]:
     return grain_orientation_bcc(ElasStif, SlipSys, angles)
+    Note:
+    When vmapping this function over a batched rotation matrix with unrotated elastif stiffness
+    ElasStif from `trip_ferrite_data.py`, we have two choices:
+     - We can call it with `in_dims=(None, 0)`:
+       >>> vmap(rotate_elastic_stiffness_singleton, in_dims=(None, 0))(ElasStif, rotation_matrices: Float[Tensor, "b 3 3"])
+     - We can call it with ElasStif copied along batch dimension:
+       >>> from einops import repeat
+       >>> batched_ElasStif = repeat(ElasStif, '3 3 3 3 -> b 3 3 3 3', b=batch_size)
+       >>> vmap(rotate_elastic_stiffness_singleton)(batched_ElasStif, rotation_matrices)
+
+    Personally I prefer the first version with the `in_dims` argument.
+    """
+    return torch.einsum(
+        "abcd, ia, jb, kc, ld -> ijkl",
+        elastic_stiffness.to(rotation_matrix.dtype),
+        rotation_matrix,
+        rotation_matrix,
+        rotation_matrix,
+        rotation_matrix,
+    )
 
 
 def get_ks(delta_s, slip_resist_0) -> float:
