@@ -178,7 +178,7 @@ def get_H_matrix(ks) -> Tensor:
     )
 
 
-def get_ws(H) -> float:
+def get_ws(H: Float[Tensor, "24 24"]) -> Float[Tensor, "24"]:
     N = len(H)
     return (1.0 / (consts.c0_F * consts.mu_F * N)) * H.sum(axis=0)
 
@@ -187,18 +187,21 @@ def get_beta(dgamma: Tensor, ws: Tensor, beta_0):
     return beta_0 + torch.dot(ws, dgamma)
 
 
-def get_gd(beta: float, ws: float) -> float:
+def get_gd(beta: float, ws: Float[Tensor, "24"]) -> Float[Tensor, "24"]:
     return -consts.omega_F * consts.mu_F * beta * ws
 
 
-def plastic_def_grad(dgamma, slip_sys, F_p0):
+def plastic_def_grad(dgamma: Float[Tensor, "24"], slip_sys: Float[Tensor, "24 3 3"], F_p0: Float[Tensor, "3 3"]):
     I = torch.eye(3, dtype=F_p0.dtype)
     return torch.linalg.inv(I - (dgamma.reshape(-1, 1, 1) * slip_sys).sum(axis=0)) @ F_p0
 
 
-def get_PK2(C_e, elas_stiff):
+def get_PK2(C_e: Float[Tensor, "3 3"], elas_stiff: Float[Tensor, "3 3 3 3"]) -> Float[Tensor, "3 3"]:
     """
-    We write this function with `sum` because sum is
+    Calculates the second Piola-Kirchhoff stress tensor.
+
+    Note:
+    We write this function with `sum` instead of `einsum` because the sum is
     faster than einsum (almost twice). There is a test in the test suite to ensure
     the two operations result in the same value.
     """
