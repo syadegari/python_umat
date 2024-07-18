@@ -17,16 +17,6 @@ from jaxtyping import Float
 from torch import Tensor
 from torch._tensor import Tensor
 
-# TODO: Decide what to do with these annotations
-# BTAngles = FloatTensor[Tuple[B, 3]]
-# BTElasticity = FloatTensor[Tuple[B, 3, 3, 3, 3]]
-# BTSlipSystem = FloatTensor[Tuple[B, 24, 3, 3]]
-# BTVarScalar = FloatTensor[Tuple[B]]
-# BTVarVector = FloatTensor[Tuple[B, 24]]
-# BTVarMatrix = FloatTensor[Tuple[B, 24, 24]]
-# BTVarStrain = FloatTensor[Tuple[B, 3, 3]]
-# F32orF64 = Union[torch.float32, torch.float64]
-
 
 def sdvini() -> Tuple[Tensor, Tensor, Tensor, float]:
     # initial plastic deformation is identity
