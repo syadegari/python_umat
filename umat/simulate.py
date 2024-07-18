@@ -23,7 +23,7 @@ from torch import Tensor
 from torch.optim.lr_scheduler import _LRScheduler
 
 
-def simulate(data: dict[str, Float[Tensor, "batch_dim ..."]], n_times: int = 400) -> list[UMATResult]:
+def simulate_umat(data: dict[str, Float[Tensor, "batch_dim ..."]], n_times: int = 400) -> list[UMATResult]:
     angles = data["angle"].numpy()
     defgrads = data["defgrad"].numpy()
 
@@ -86,7 +86,7 @@ def update_buffer(circular_train_loader, buffer: PriotorizedReplayBuffer, cfg: C
         )
         print(f"Estimated number of additions to the buffer: {cfg.n_time * cfg.dataset_batch_train} experiences")
     data = next(circular_train_loader)
-    result = simulate(data, cfg.n_time)
+    result = simulate_umat(data, cfg.n_time)
     add_result_to_buffer(result, buffer)
 
 
