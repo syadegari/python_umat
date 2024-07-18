@@ -2,8 +2,8 @@ import torch
 from torch._tensor import Tensor
 
 
-SlipSys: Tensor = torch.zeros([24, 3, 3])
-ElasStif: Tensor = torch.zeros([3, 3, 3, 3])
+SlipSys: Tensor = torch.zeros([24, 3, 3], dtype=torch.float64)
+ElasStif: Tensor = torch.zeros([3, 3, 3, 3], dtype=torch.float64)
 
 # plastic slip systems: schmid tensors
 SlipSys[0, 0, 0] =  0.0                                
