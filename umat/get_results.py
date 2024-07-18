@@ -29,7 +29,7 @@ def pairwise(xs: list[Any]) -> Iterator[Tuple[Any, Any]]:
     return zip(xs[:-1], xs[1:])
 
 
-def get_results(f_final: Float[ndarray, "3 3"], angles: Float[ndarray, "3"], n_times: int) -> dict:
+def get_results_from_umat(f_final: Float[ndarray, "3 3"], angles: Float[ndarray, "3"], n_times: int) -> dict:
 
     sigma = np.zeros(6)
     c = np.zeros([6, 6], order="F")
@@ -79,7 +79,7 @@ class UMATResult:
 
 
 def get_results_with_state(f_final: Float[ndarray, "3 3"], angles: Float[ndarray, "3"], n_times: int) -> UMATResult:
-    result = get_results(f_final, angles, n_times)
+    result = get_results_from_umat(f_final, angles, n_times)
     return UMATResult(
         F_final=result["F_final"],
         theta=result["theta"],

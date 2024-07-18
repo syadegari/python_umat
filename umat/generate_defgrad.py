@@ -10,10 +10,12 @@ import numpy as np
 from numpy import ndarray
 from numpy import sin, cos
 from jaxtyping import Float
-from get_results import get_results
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from sklearn.manifold import TSNE
+
+# module imports
+from .get_results import get_results_from_umat
 
 # We want to generate deformation gradient and orientation pairs for simulations
 # We only want to save these pairs and not the entire history
@@ -91,7 +93,7 @@ def generate_data(cfg: Config):
     )
     angles = generate_single_orientation()
 
-    results = get_results(defgrad, angles, cfg.n_times)
+    results = get_results_from_umat(defgrad, angles, cfg.n_times)
     max_stress = np.abs(results["stress"]).max()
     if max_stress < cfg.max_allowable_stress:
         return {"defgrad": defgrad, "angles": angles, "max_stress": max_stress}
