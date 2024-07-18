@@ -277,3 +277,27 @@ def get_penalty_min_slip_resistance(slip_resistance: Tensor) -> Tensor:
     """Penalty in case slip resistance is less than s_0_F"""
     delta_to_lower_value = slip_resistance - consts.s0_F
     return torch.where(delta_to_lower_value >= 0, 0.0, -delta_to_lower_value)
+
+
+def get_cauchy_stress(
+    F: Float[Tensor, "3 3"], Fp: Float[Tensor, "3 3"], elastic_stiffness: Float[Tensor, "3 3"]
+) -> Float[Tensor, "3 3"]:
+    """
+    Argument list
+
+    F [3x3]: Deformation gradient
+    Fp [3x3]: Plastic deformation gradient
+    elastic_stiffness [3x3x3x3]: Elastic stiffness tensor
+
+    Returns:
+    sigma [3x3]: Cauchy stress tensor at n+1 time step
+
+    Primary usage of this function is at inference to calculate
+    the Cauchy stress from the plastic slip.
+    """
+
+    Fe = F @ torch.linalg.inv(Fp)
+    S = get_PK2(Fe.T @ Fe, elastic_stiffness)
+    sigma = 1 / (torch.linalg.det(Fe)) * Fe @ S @ Fe.T
+
+    return sigma
