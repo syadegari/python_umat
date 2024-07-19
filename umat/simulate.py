@@ -298,7 +298,7 @@ def plot_stress(
     writer.add_image(f"Validation/Stress/Step{n_step}", image_tensor, global_step=n_step)
 
 
-def train(cfg: Config) -> None:
+def train(cfg: Config, writer: SummaryWriter) -> None:
     dataset_hdf5 = read_hdf5(cfg.dataset_path)
     dset = UMATDataSet(dataset_hdf5)
     train, val, test = split_dataset(dset, cfg)
