@@ -70,3 +70,40 @@ ACTION:
  2. Simply skip computing the physics loss for eg 100 iterations.
 *** TODO Clipping the gardient. Clip gradient of each loss separately. But for this we need to accumulate the gradients individually from each loss without the help from the optimizer. See how this should be implemented.
 *** TODO L2 regularization of weights of the network.
+
+
+** TODO Try different options:
+Here `-->` is a place holder for the model. 
+ 1- gamma_0, s_0, F0, F1, theta --> gamma_1, s_1
+ 2- gamma_0, s_0, F0, F1, theta --> Delta_gamma, Delta_s
+ 3- (r_II)_p --> Delta_gamma, Delta_s, where (r_II)_p is the predictor r_II assuming Delta_gamma = 0 and Delta_s = 0. (r_I)_p is zero arbitrarily (r_I = Delta_gamma - H Delta_s) and does not make sense to have it as an input.
+*** TODO Before implementing (3), we need to find out how big the predictor vector is.
+** DONE For the physics loss, r_I and r_II should be concatenated before calculating the loss.
+Currently we have mse(r_I, 0) + mse(r_II, 0). When solving the equations in umat, we consider only one system of equations, comprised of both r_I and r_II. It is therefore appropriate to have one loss when training instead of separating them, ie, mse([r_I, r_II], 0)
+** TODO Find out a way to anneal beta for the current situation. `beta` is currently the function of curernt step and total steps, where the latter is undefined due to the way we train the model. One idea is to keep a running average of td_errors and adjust beta based on that.
+** TODO 1- Logging
+*** DONE save pictures of stress (model vs umat)
+*** TODO losses and td_errors. Break down to subcomponents and total
+**** DONE loss subcomponents
+**** DONE td-error statistics
+**** TODO ERB (Experience Replay Buffer) sampled weight statistics
+**** TODO Beta values.
+*** TODO Make sure beta for ERB is bounded from above to 1.
+*** DONE Find out why the logs stop at 5000
+*** DONE log the td-buffer statistics
+*** DONE Understand the loss calculation
+*** TODO plot norm or gamma and slip resistance for validated samples (both from UMAT and autoregressive model)
+* TODO 2- Testing
+** DONE r_I and r_II should be close to zero.
+We checked this already and wrote a test for it to document it. It's under `tests/residual_investigation`
+** DONE mechanical stress calculation should be close to umat stress.
+Also checked this and confirm that it is done correctly. It's part of the test `tests/residual_investigation`.
+** TODO See for example, how the error grows for (r_I)p and (r_II)p when we linearly changing the variables s and gamma from values in t_n to values in t_{n+1}. Particularly interesting is to see how big the (r_I) and (r_II) when computed with gamma=gamma_n and s=s_n. We can define (r_I)_{\alpha} and (r_II)_{\alpha} where \alpha is between 0 and 1 and linearly interpolates between values at t_n and t_{n+1}, ie, gamma = \alpha gamma_n + (1 - \alpha) gamma_{n+1} and s = \alpha s_n + (1 - \alpha) s_{n+1}.
+** DONE Study the reason why $r_I$ is Nan. With clipping and enforcing positive delta gamma, we should not get nan for r_I
+ - This was due to the way clipping was done. We used to clip slip_resistance to be between min and max slip resistance, but if the updated slip resistance is less than slip_resistance_0, k will be imaginary. So the proper way to clip slip_resistance is to constrain it to be between slip_resistance_0 and max slip resistance, ie,  s_0 <= s_1 <= s_max.
+ - Another issue that can arise is to consider the residuals that can arise with respect to floating point additions. This happens when constraining s from above (s_1 <= s_max). So we need to create a buffer zone where we don't really touch the upper limit, ie, s_1 + eps <= s_max.
+* DONE Implement learning rate scheduler. Look for variable learning rate such as cosine lr.
+Implemetend cosine annealing with warmup that linearly reduces its warmup peak value. For now we can work with this and don't need to invest in more LR schedulers, until we implement a better network and add more loggings.
+* TODO Implement netowrks with higher capacity
+
+
