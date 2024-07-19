@@ -98,6 +98,19 @@ def train_model(loss: LossFunction, optimizer: Optimizer, scheduler: _LRSchedule
         scheduler.step()
 
 
+def print_function_name_once(func):
+    has_been_called = False
+
+    def wrapper(*args, **kwargs):
+        nonlocal has_been_called
+        if not has_been_called:
+            print(f"Calling function: {func.__name__}")
+            has_been_called = True
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 
 
 def train(cfg: Config) -> None:
