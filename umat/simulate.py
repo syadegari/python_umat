@@ -111,6 +111,24 @@ def print_function_name_once(func):
     return wrapper
 
 
+@dataclass
+class ModelResult:
+    """
+    This is similar to `Ys` dataclass but with addition of deformation gradient for
+    each state since we need to compute the plastic deformation gradient later in `validate` function.
+    It is also specialized for batch 1 with `__post_init__` check.
+    """
+
+    gamma: Float[Tensor, "1 24"] = None
+    slip_resistance: Float[Tensor, "1 24"] = None
+    defgrad: Float[Tensor, "1 3 3"] = None
+
+    def __post_init__(self):
+        assert self.gamma.shape == (1, 24)
+        assert self.slip_resistance.shape == (1, 24)
+        assert self.defgrad.shape == (1, 3, 3)
+
+
 
 
 def train(cfg: Config) -> None:
