@@ -177,4 +177,13 @@ def log_losses(
 
 
 def main(cfg: Config) -> None:
-    train(cfg)
+    writer = SummaryWriter(cfg.log_directory, flush_secs=20)
+    try:
+        train(cfg, writer)
+    except RuntimeError as e:
+        print(f"Caught an error: {e}")
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback.print_exception(exc_type, exc_value, exc_traceback)
+        pdb.post_mortem(exc_traceback)
+    finally:
+        writer.close()
