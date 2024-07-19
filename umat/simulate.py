@@ -137,13 +137,43 @@ def train(cfg: Config) -> None:
             sampled_values = buffer.sample(idx_iteration)
             xs, ys = model.make_batch(sampled_values, cfg)
             ys_hat = model.forward(xs)
-            loss, td_error = loss_fn.forward(ys, ys_hat, xs, sampled_values.weights, cfg)
-            print(loss)
-            train_model(loss, optimizer)
+            loss, td_error, loss_items_dict = loss_fn.forward(ys, ys_hat, xs, sampled_values.weights, cfg)
+            log_losses(loss, loss_items_dict, td_error, optimizer, scheduler, writer, n_step)
+            if n_step % 100 == 0:
+                print(loss.data)
+            train_model(loss, optimizer, scheduler)
             buffer.update_priorities(sampled_values.indices, td_error)
 
         print("Add data to buffer")
         update_buffer(circular_train_loader, buffer, cfg, print_msg=True)
+
+
+def log_losses(
+    loss: Tensor,
+    loss_items: dict,
+    td_error: Float[ndarray, "batch"],
+    optimizer: Optimizer,
+    scheduler: _LRScheduler,
+    writer: SummaryWriter,
+    n_step: int,
+) -> None:
+    writer.add_scalars("TrainingLossComponents", loss_items, global_step=n_step)
+    writer.add_scalar("TrainingLoss", loss.cpu().detach().item(), global_step=n_step)
+
+    td_statistics_1 = {
+        "max": np.max(td_error),
+        "min": np.min(td_error),
+        "std": np.std(td_error),
+        "mean": np.mean(td_error),
+    }
+    writer.add_scalars("TDError", td_statistics_1, n_step)
+
+    quantiles = np.quantile(td_error, [0.25, 0.50, 0.75], axis=0)
+    td_statistics_2 = {"25% quantile": quantiles[0], "50% quantile": quantiles[1], "75% quantile": quantiles[2]}
+    writer.add_scalars("TDErrorQuantiles", td_statistics_2, n_step)
+
+    if scheduler is not None:
+        writer.add_scalar("LearningRate", optimizer.param_groups[0]["lr"], global_step=n_step)
 
 
 def main(cfg: Config) -> None:
