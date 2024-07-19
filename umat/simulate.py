@@ -136,6 +136,63 @@ def get_model_dtype(model: nn.Module) -> torch.dtype:
 
 
 @print_function_name_once
+def simulate_model(model: Model, Fs: Float[ndarray, "n_times + 1 9"], theta: Float[ndarray, "3"]) -> list[ModelResult]:
+    """
+    Given a trained model, autoregressively feed the model and create a trajectory of predicted quantities.
+    """
+
+    model_dtype = get_model_dtype(model)
+
+    # initialize the interval variables
+    gamma = torch.zeros(24).to(model_dtype).reshape(1, -1)
+    slip_resistance = (consts.s0_F * torch.ones(24)).to(model_dtype).reshape(1, -1)
+
+    # since it's fixed we define it here once
+    theta = torch.from_numpy(theta).to(model_dtype).reshape(1, -1)  # batch 1
+
+    # Initialize the results. First entries are the vectors of variables at t = 0,
+    # and deformation gradient is identity for t = 0
+    model_result_list = [
+        ModelResult(
+            gamma=gamma.clone(),
+            slip_resistance=slip_resistance.clone(),
+            defgrad=torch.ones(1, 3, 3).to(model_dtype),
+        )
+    ]
+
+    model.eval()
+    with torch.no_grad():
+        for F0, F1 in pairwise(Fs):
+            defgrad0 = torch.from_numpy(F0).to(model_dtype).reshape(1, -1)  # batch 1
+            defgrad1 = torch.from_numpy(F1).to(model_dtype).reshape(1, -1)  # batch 1
+            xs = Xs(
+                defgrad0=defgrad0,
+                defgrad1=defgrad1,
+                theta=theta,
+                gamma=gamma,
+                slip_resistance=slip_resistance,
+            )
+            ys_hat = model.forward(xs)
+
+            constrained_gamma = enforce_positive_gamma_increment(ys_hat.gamma, gamma)
+            constrained_slip_resistance = clip_slip_resistance(ys_hat.slip_resistance, xs.slip_resistance)
+            model_result_list.append(
+                ModelResult(
+                    gamma=constrained_gamma.clone(),
+                    slip_resistance=constrained_slip_resistance.clone(),
+                    defgrad=defgrad1.reshape(1, 3, 3),
+                )
+            )
+
+            gamma = constrained_gamma
+            slip_resistance = constrained_slip_resistance
+
+    model.train()
+
+    return model_result_list
+
+
+@print_function_name_once
 def compare_results(stress_umat: Tensor, stress_model: Tensor) -> Tensor:
     relative_error = (stress_umat - stress_model).norm() / stress_umat.norm()
     print(f"Relative difference between umat and model: {relative_error:.4f}")
@@ -150,6 +207,95 @@ def to_Voigt(stress: Float[Tensor, "3 3"]) -> Float[Tensor, "6"]:
     return stress[[0, 1, 2, 0, 0, 1], [0, 1, 2, 1, 2, 2]]
 
 
+@print_function_name_once
+def validate(circular_val_loader, model: nn.Module, cfg: Config, writer: SummaryWriter, n_step: int):
+    model_dtype = get_model_dtype(model)
+
+    data = next(circular_val_loader)
+    results_umat: list[UMATResult] = simulate_umat(data, cfg.n_time)
+
+    relative_errors = []
+    stress_histories: Float[ndarray, "N 6"] = []
+
+    for result_umat in results_umat:
+        result_model = simulate_model(model, result_umat.F, result_umat.theta)
+        # Since the model results are batched, we vmap the rest of the functions. we need to
+        # make sure that some initializations are then batched. This include plastic_defgrad and
+        # theta that we receive from umat model
+
+        # now we can iterate and compute the plastic deformation gradient and stress
+        # initialize plastic deformation gradient
+        batch_size = 1
+        plastic_defgrad = torch.eye(3).to(model_dtype).reshape(batch_size, 3, 3)
+
+        # rotated stiffness and slip systems
+        # rm = rotation_matrix(torch.from_numpy(result_umat.theta).to(model_dtype).reshape(1, -1))
+        theta = einops.rearrange(torch.from_numpy(result_umat.theta), f"... -> {batch_size} ...").to(model_dtype)
+        rm = vmap(rotation_matrix)(theta)
+        rotated_slip_system = vmap(rotate_slip_system, in_dims=(None, 0))(SlipSys, rm)
+        rotated_elastic_stiffness = vmap(rotate_elastic_stiffness, in_dims=(None, 0))(ElasStif, rm)
+
+        # initial the stress history with zero stress
+        stress_hist: list[Float[Tensor, "6"]] = [to_Voigt(torch.zeros(3, 3).to(model_dtype))]
+
+        for model_result0, model_result1 in pairwise(result_model):
+            plastic_defgrad = vmap(plastic_def_grad)(
+                model_result1.gamma - model_result0.gamma, rotated_slip_system, plastic_defgrad.clone()
+            )
+            cauchy_stress = vmap(get_cauchy_stress)(model_result1.defgrad, plastic_defgrad, rotated_elastic_stiffness)
+            stress_hist.append(to_Voigt(cauchy_stress.squeeze().clone()))
+
+        relative_error = compare_results(
+            stress_umat=torch.tensor(result_umat.stress),
+            stress_model=torch.stack(stress_hist),
+        )
+        relative_errors.append(relative_error)
+        stress_histories.append(torch.stack(stress_hist).numpy())
+
+    mean_relative_error = torch.tensor(relative_errors).mean()
+    writer.add_scalar("validation/ave_relative_error", mean_relative_error, n_step)
+
+    plot_stress(stress_histories, results_umat, relative_errors, writer, n_step)
+
+
+def get_plot(stress_umat: Float[ndarray, "N 6"], stress_model: Float[ndarray, "N 6"]):
+    fig, axes = plt.subplots(2, 3, figsize=(10, 6))
+    ts = np.linspace(0, 1, stress_umat.shape[0])
+    stress_component_labels = "11 22 33 12 13 23".split()
+
+    for idx, ax in enumerate(axes.ravel()):
+        v1 = min(stress_umat.min(), stress_model.min())
+        v2 = max(stress_umat.max(), stress_model.max())
+        v1 = round(v1 * 10 + 0.5) / 10 + 0.1 if v1 > 0 else round(v1 * 10 - 0.5) / 10 - 0.1
+        v2 = round(v2 * 10 + 0.5) / 10 + 0.1 if v2 > 0 else round(v2 * 10 - 0.5) / 10 - 0.1
+
+        ax.set_ylim(v1, v2)
+        ax.set_xlim(-0.02, 1)
+        ax.set_title(stress_component_labels[idx])
+        ax.plot(ts, stress_umat[:, idx])
+        ax.plot(ts, stress_model[:, idx])
+    plt.tight_layout()
+
+    return fig_to_buffer(fig, dpi=120)
+
+
+def plot_stress(
+    stress_histories: list[Float[ndarray, "N 6"]],
+    results_umat: list[UMATResult],
+    relative_erros: list[Tensor],
+    writer: SummaryWriter,
+    n_step: int,
+) -> None:
+
+    assert len(stress_histories) == len(results_umat) == len(relative_erros)
+    # get the worst case
+    max_err_idx = torch.tensor(relative_erros).argmax().item()
+
+    stress_model = stress_histories[max_err_idx]
+    stress_umat = results_umat[max_err_idx].stress
+    image_buffer = get_plot(stress_umat, stress_model)
+    image_tensor = torch.from_numpy(np.array(Image.open(image_buffer))).permute(2, 0, 1).squeeze(0) / 255.0
+    writer.add_image(f"Validation/Stress/Step{n_step}", image_tensor, global_step=n_step)
 
 
 def train(cfg: Config) -> None:
@@ -198,7 +344,7 @@ def train(cfg: Config) -> None:
             train_model(loss, optimizer, scheduler)
             buffer.update_priorities(sampled_values.indices, td_error)
 
-        print("Add data to buffer")
+        validate(circular_val_loader, model, cfg, writer, n_step)
         update_buffer(circular_train_loader, buffer, cfg, print_msg=True)
 
 
