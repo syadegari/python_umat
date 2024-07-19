@@ -228,26 +228,6 @@ def get_rI(s0, s1, gamma0, gamma1, H_matrix):
     return (s1 - s0) - H_matrix @ (gamma1 - gamma0)
 
 
-# TODO: Remove these functions after discussing the results with Sathis and Nurul.
-#       We have found the correct formulation for calculating r_II and don't need these functions
-#       for testing anymore.
-#
-# def get_rII_alternative_1(g1, s1, non_schmid_stress, gamma0, gamma1, gamma_dot_0, dt, pF) -> Tensor:
-#     return g1 - (s1 - non_schmid_stress) * ((gamma1 - gamma0) / (gamma_dot_0 * dt) + 1) ** pF
-
-
-# def get_rII_alternative_3(g1, s1, non_schmid_stress, gamma0, gamma1, gamma_dot_0, dt, pF) -> Tensor:
-#     return g1 - (s1 ) * ((gamma1 - gamma0) / (gamma_dot_0 * dt) + 1) ** pF
-
-
-# def get_rII(g1, s1, non_schmid_stress, gamma0, gamma1, gamma_dot_0, dt, pF) -> Tensor:
-#     return torch.where(
-#         g1 > s1,
-#         g1 - (s1 - non_schmid_stress) * ((gamma1 - gamma0) / (gamma_dot_0 * dt) + 1) ** pF,
-#         gamma1 - gamma0,
-#     )
-
-
 def get_rII(g1, s1, non_schmid_stress, gamma0, gamma1, gamma_dot_0, dt, pF) -> Tensor:
     return torch.where(
         g1 > s1 - non_schmid_stress,
