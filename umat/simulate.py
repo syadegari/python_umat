@@ -135,6 +135,13 @@ def get_model_dtype(model: nn.Module) -> torch.dtype:
     return None
 
 
+@print_function_name_once
+def compare_results(stress_umat: Tensor, stress_model: Tensor) -> Tensor:
+    relative_error = (stress_umat - stress_model).norm() / stress_umat.norm()
+    print(f"Relative difference between umat and model: {relative_error:.4f}")
+    return relative_error
+
+
 
 
 def train(cfg: Config) -> None:
