@@ -1,25 +1,53 @@
-import pandas as pd
+import pdb
+import sys
+import traceback
 import torch
+import einops
 import multiprocessing as mp
 from itertools import repeat
 from dataclasses import dataclass
 import numpy as np
 import torch.nn as nn
+from torch.func import vmap
+import matplotlib.pyplot as plt
+from PIL import Image
+from torch.utils.tensorboard import SummaryWriter
+
 
 # Module imports
 from umat.lr_scheduler import CustomCosineAnnealingWarmRestarts
+from .replay_buffer import IntVarIndices
 from .get_results import get_results_with_state, UMATResult
 from .replay_buffer import PriotorizedReplayBuffer, SampledValues
-from .dataset import read_hdf5, UMATDataSet, split_dataset, create_data_loaders, circular_loader
+from .dataset import (
+    read_hdf5,
+    UMATDataSet,
+    split_dataset,
+    create_data_loaders,
+    circular_loader,
+)
+from .generate_defgrad import fig_to_buffer
 from .model import Model, LossFunction
 from .replay_buffer import IntVarIndices, State
 from .config import Config
-from torch.optim import Optimizer
+from .constants import consts
+from .model import Xs, Ys
+from .umat import (
+    clip_slip_resistance,
+    enforce_positive_gamma_increment,
+    plastic_def_grad,
+    rotate_elastic_stiffness,
+    rotate_slip_system,
+    rotation_matrix,
+    get_cauchy_stress,
+)
+from .trip_ferrite_data import ElasStif, SlipSys
 
 # Typing
-from typing import Tuple
 from jaxtyping import Float
 from torch import Tensor
+from numpy import ndarray
+from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 
 
