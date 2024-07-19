@@ -29,6 +29,13 @@ class Config:
 
     lr: float = None
 
+    use_lr_scheduler: bool = None
+    lr_scheduler_T_0: int = None
+    lr_scheduler_T_multi: int = None
+    lr_scheduler_initial_lr: float = None
+    lt_scheduler_final_lr: float = None
+    lr_scheduler_eta_min: float = None
+
     # split dataset values
     split_train_proportion: float = None
     split_val_proportion: float = None
@@ -38,6 +45,9 @@ class Config:
     dataset_batch_train: int = None
     dataset_batch_val: int = None
     dataset_batch_test: int = None
+
+    # log directory
+    log_directory: str = None
 
     def __str__(self) -> str:
         return pprint.pformat(vars(self))
@@ -50,5 +60,6 @@ class Config:
         self.penalty_coeff_max_slipres = float(self.penalty_coeff_max_slipres)
 
         assert np.isclose(
-            self.split_train_proportion + self.split_val_proportion + self.split_test_proportion, 1.0
+            self.split_train_proportion + self.split_val_proportion + self.split_test_proportion,
+            1.0,
         ), "The sum of train_prop, val_prop, and test_prop must equal 1.0"
