@@ -107,6 +107,8 @@ def train(cfg: Config) -> None:
     train_loader, val_loader, test_loader = create_data_loaders(train, val, test, cfg)
     circular_train_loader = circular_loader(train_loader)
     circular_val_loader = circular_loader(val_loader)
+    # TODO: `n_total_steps` is too small with current setup.
+    #        Think how this can be enhanced. Understand how annealing works.
     buffer = PriotorizedReplayBuffer(cfg.buffer_size, cfg.batch_size, 101, n_total_steps=cfg.N_iteration)
     model = Model(nn.Tanh()).to(torch.float64)
     optimizer = torch.optim.Adam(model.parameters(), cfg.lr)
