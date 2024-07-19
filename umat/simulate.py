@@ -142,6 +142,14 @@ def compare_results(stress_umat: Tensor, stress_model: Tensor) -> Tensor:
     return relative_error
 
 
+# @print_function_name_once
+def to_Voigt(stress: Float[Tensor, "3 3"]) -> Float[Tensor, "6"]:
+    """
+    11, 22, 33, 12, 13, 23
+    """
+    return stress[[0, 1, 2, 0, 0, 1], [0, 1, 2, 1, 2, 2]]
+
+
 
 
 def train(cfg: Config) -> None:
