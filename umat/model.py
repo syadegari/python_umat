@@ -13,7 +13,7 @@ from .umat import (
     get_rII,
     get_driving_force,
     clip_slip_resistance,
-    enforce_non_negative_increment,
+    enforce_positive_gamma_increment,
     get_penalty_delta_gamma,
     get_penalty_max_slip_resistance,
     get_penalty_min_slip_resistance,

@@ -264,7 +264,7 @@ def get_rII(g1, s1, non_schmid_stress, gamma0, gamma1, gamma_dot_0, dt, pF) -> T
     )
 
 
-def enforce_non_negative_increment(gamma1: Tensor, gamma0: Tensor) -> Tensor:
+def enforce_positive_gamma_increment(gamma1: Tensor, gamma0: Tensor) -> Tensor:
     """Enforces delta_gamma => 0"""
     return torch.where(gamma1 >= gamma0, gamma1, gamma0)
 
