@@ -129,6 +129,12 @@ class ModelResult:
         assert self.defgrad.shape == (1, 3, 3)
 
 
+def get_model_dtype(model: nn.Module) -> torch.dtype:
+    for param in model.parameters():
+        return param.dtype
+    return None
+
+
 
 
 def train(cfg: Config) -> None:
