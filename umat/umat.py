@@ -261,11 +261,6 @@ def get_rII(g1, s1, non_schmid_stress, gamma0, gamma1, gamma_dot_0, dt, pF) -> T
     )
 
 
-def clip_slip_resistance(slip_resistance: Tensor) -> Tensor:
-    """Clips slip resistance to be between min and max"""
-    return torch.clip(slip_resistance, consts.s0_F, consts.sInf_F)
-
-
 def enforce_non_negative_increment(gamma1: Tensor, gamma0: Tensor) -> Tensor:
     """Enforces delta_gamma => 0"""
     return torch.where(gamma1 >= gamma0, gamma1, gamma0)
@@ -275,6 +270,15 @@ def get_penalty_delta_gamma(gamma1: Tensor, gamma0: Tensor) -> Tensor:
     """Penalty in case delta gamma is negative"""
     delta_gamma = gamma1 - gamma0
     return torch.where(delta_gamma >= 0, 0.0, -delta_gamma)
+
+
+def clip_slip_resistance(slip_resistance: Tensor, slip_resistance0: Tensor) -> Tensor:
+    """
+    Clips slip resistance to be between s0 and sInf_F. The use of `resolution` is because
+    we have had issues with `Nan`, so we needed to not hit the upper limit exactly.
+    """
+    resolution = torch.finfo(slip_resistance.dtype).resolution
+    return torch.clip(slip_resistance, slip_resistance0, consts.sInf_F * torch.ones_like(slip_resistance0) - resolution)
 
 
 def get_penalty_max_slip_resistance(slip_resistance: Tensor) -> Tensor:

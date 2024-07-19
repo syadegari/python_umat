@@ -185,7 +185,7 @@ class LossFunction(nn.Module):
         # )
         dtime: Float[Tensor, "batch"] = xs.t1 - xs.t0
 
-        clipped_slipres1_hat = clip_slip_resistance(ys_hat.slip_resistance)
+        clipped_slipres1_hat = clip_slip_resistance(ys_hat.slip_resistance, xs.slip_resistance)
         # ensures that gamma1 >= gamma0
         gamma1_hat = enforce_positive_gamma_increment(ys_hat.gamma, xs.gamma)
 
