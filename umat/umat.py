@@ -1,18 +1,10 @@
-from dataclasses import dataclass, field
-import numpy as np
 import torch
-import torch.nn as nn
 from torch import Tensor
 
-from torch.func import vmap
-
-# from torch._functorch.apis import vmap
-import einops
-
+# module imports
 from .constants import consts
-from .trip_ferrite_data import SlipSys, ElasStif
 
-from typing import Tuple, Union, List
+from typing import Tuple
 from jaxtyping import Float
 from torch import Tensor
 from torch._tensor import Tensor
