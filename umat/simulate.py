@@ -133,7 +133,7 @@ def train(cfg: Config) -> None:
             update_buffer(circular_train_loader, buffer, cfg)
 
         for idx_iteration in range(1, cfg.N_iteration + 1):
-            n_step += idx_iteration
+            n_step += 1
             sampled_values = buffer.sample(idx_iteration)
             xs, ys = model.make_batch(sampled_values, cfg)
             ys_hat = model.forward(xs)
