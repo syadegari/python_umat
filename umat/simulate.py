@@ -16,9 +16,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 # Module imports
 from umat.lr_scheduler import CustomCosineAnnealingWarmRestarts
-from .replay_buffer import IntVarIndices
+from .replay_buffer import IntVarIndices, SampledValues, PriotorizedReplayBuffer
 from .get_results import get_results_with_state, UMATResult
-from .replay_buffer import PriotorizedReplayBuffer, SampledValues
 from .dataset import (
     read_hdf5,
     UMATDataSet,
