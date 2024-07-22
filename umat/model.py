@@ -226,9 +226,7 @@ class LossFunction(nn.Module):
             xs.gamma,
             # gamma1 should be bigger than or equal to gamma0. This is already ensured by using `enforce_positive_gamma_increment`
             gamma1_hat,
-            torch.tensor(cfg.batch_size * [consts.GammaDot0_F], dtype=torch.float64),
             dtime,
-            torch.tensor(cfg.batch_size * [consts.pExp_F], dtype=torch.float64),
         )
 
         penalty_delta_gamma = get_penalty_delta_gamma(ys_hat.gamma, xs.gamma)

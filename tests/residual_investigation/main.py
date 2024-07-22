@@ -57,9 +57,7 @@ if __name__ == "__main__":
 
         r_I = umat.get_rI(slip_resistance0, slip_resistance1, gamma0, gamma1, H)
 
-        r_II = umat.get_rII(
-            g1, slip_resistance1, nonSchmidStress, gamma0, gamma1, consts.GammaDot0_F, s1.t - s0.t, consts.pExp_F
-        )
+        r_II = umat.get_rII(g1, slip_resistance1, nonSchmidStress, gamma0, gamma1, s1.t - s0.t)
 
         Fp1 = umat.plastic_def_grad(gamma1 - gamma0, rotated_slip_system, Fp0)
         sigma = sim.to_Voigt(umat.get_cauchy_stress(F1, Fp1, rotated_elastic_stiffness))
@@ -77,9 +75,7 @@ if __name__ == "__main__":
             Fp0=Fp0,
             F1=F1,
         )
-        r_II_p = umat.get_rII(
-            g1_p, slip_resistance0, nonSchmidStress_p, gamma0, gamma0, consts.GammaDot0_F, s1.t - s0.t, consts.pExp_F
-        )
+        r_II_p = umat.get_rII(g1_p, slip_resistance0, nonSchmidStress_p, gamma0, gamma0, s1.t - s0.t)
         #
         # predictor section end
         #
