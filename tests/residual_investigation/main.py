@@ -41,9 +41,6 @@ if __name__ == "__main__":
 
         Fp0 = torch.from_numpy(s0.intvar.plastic_defgrad).reshape(3, 3)
         F1 = torch.from_numpy(s1.defgrad).reshape(3, 3)
-        # import pdb
-
-        # pdb.set_trace()
         g1, H, nonSchmidStress = umat.get_driving_force(
             rotated_slip_system,
             rotated_elastic_stiffness,

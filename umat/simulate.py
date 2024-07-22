@@ -162,7 +162,6 @@ def get_model_dtype(model: nn.Module) -> torch.dtype:
     return None
 
 
-@print_function_name_once
 def simulate_model(model: Model, Fs: Float[ndarray, "n_times + 1 9"], theta: Float[ndarray, "3"]) -> list[ModelResult]:
     """
     Given a trained model, autoregressively feed the model and create a trajectory of predicted quantities.
@@ -219,14 +218,12 @@ def simulate_model(model: Model, Fs: Float[ndarray, "n_times + 1 9"], theta: Flo
     return model_result_list
 
 
-@print_function_name_once
 def compare_results(stress_umat: Tensor, stress_model: Tensor) -> Tensor:
     relative_error = (stress_umat - stress_model).norm() / stress_umat.norm()
     print(f"Relative difference between umat and model: {relative_error:.4f}")
     return relative_error
 
 
-# @print_function_name_once
 def to_Voigt(stress: Float[Tensor, "3 3"]) -> Float[Tensor, "6"]:
     """
     11, 22, 33, 12, 13, 23
@@ -234,7 +231,6 @@ def to_Voigt(stress: Float[Tensor, "3 3"]) -> Float[Tensor, "6"]:
     return stress[[0, 1, 2, 0, 0, 1], [0, 1, 2, 1, 2, 2]]
 
 
-@print_function_name_once
 def validate(circular_val_loader, model: nn.Module, cfg: Config, writer: SummaryWriter, n_step: int):
     model_dtype = get_model_dtype(model)
 
