@@ -351,13 +351,14 @@ def train(cfg: Config, writer: SummaryWriter) -> None:
 
     n_step = 0
     while True:
+        # Fill the buffer to `min_buffer_size` first before continuiing with training
         while len(buffer) < cfg.min_buffer_size:
             print(len(buffer))
             update_buffer(circular_train_loader, buffer, cfg)
 
         for idx_iteration in range(1, cfg.N_iteration + 1):
             n_step += 1
-            sampled_values = buffer.sample(idx_iteration)
+            sampled_values: SampledValues = buffer.sample(idx_iteration)
             xs, ys = model.make_batch(sampled_values, cfg)
             ys_hat = model.forward(xs)
             loss, td_error, loss_items_dict = loss_fn.forward(ys, ys_hat, xs, sampled_values.weights, cfg)

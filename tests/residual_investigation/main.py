@@ -60,7 +60,10 @@ if __name__ == "__main__":
         sigma = sim.to_Voigt(umat.get_cauchy_stress(F1, Fp1, rotated_elastic_stiffness))
 
         #
-        # predictor values begin
+        # Computing the predictor values
+        # A predictor value is defined by setting the increment of
+        # rimary variables, gamma and slip resistance to zero. We skip computation
+        # predictor for r_I since it's trivially zero.
         #
         g1_p, H_p, nonSchmidStress_p = umat.get_driving_force(
             rotated_slip_system,
@@ -74,8 +77,7 @@ if __name__ == "__main__":
         )
         r_II_p = umat.get_rII(g1_p, slip_resistance0, nonSchmidStress_p, gamma0, gamma0, s1.t - s0.t)
         #
-        # predictor section end
-        #
+        # header
         if s0.t == 0.0:
             print("r_I norm, r_II norm, predictive r_II norm, relative stress error")
 
