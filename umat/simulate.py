@@ -43,11 +43,13 @@ from .umat import (
 from .trip_ferrite_data import ElasStif, SlipSys
 
 # Typing
+from typing import Tuple
 from jaxtyping import Float
 from torch import Tensor
 from numpy import ndarray
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
+from io import BytesIO
 
 
 def simulate_umat(data: dict[str, Float[Tensor, "batch_dim ..."]], n_times: int = 400) -> list[UMATResult]:
@@ -80,6 +82,22 @@ def parse_umat_output(umat_result: UMATResult) -> list[State]:
         states.append(state)
 
     return states
+
+
+def extract_slipresistance_from_umat_sim(umat_result: UMATResult) -> Float[Tensor, "N 24"]:
+    states: list[State] = parse_umat_output(umat_result)
+    result_list = []
+    for state in states:
+        result_list.append(state.intvar.slip_resistance.copy())
+    return torch.from_numpy(np.stack(result_list))
+
+
+def extract_gamma_from_umat_sim(umat_result: UMATResult) -> Float[Tensor, "N 24"]:
+    states: list[State] = parse_umat_output(umat_result)
+    result_list = []
+    for state in states:
+        result_list.append(state.intvar.gamma.copy())
+    return torch.from_numpy(np.stack(result_list))
 
 
 def make_state(result: UMATResult, intvar_indices: IntVarIndices, step: int) -> State:
@@ -237,11 +255,16 @@ def validate(circular_val_loader, model: nn.Module, cfg: Config, writer: Summary
     data = next(circular_val_loader)
     results_umat: list[UMATResult] = simulate_umat(data, cfg.n_time)
 
-    relative_errors = []
-    stress_histories: Float[ndarray, "N 6"] = []
+    relative_errors_stress = []
+    relative_errors_gamma = []
+    relative_errors_slipresistance = []
+
+    stress_histories: list[Float[ndarray, "N 6"]] = []
+    gamma_histories: list[Float[ndarray, "N 24"]] = []
+    slipresistance_histories: list[Float[ndarray, "N 24"]] = []
 
     for result_umat in results_umat:
-        result_model = simulate_model(model, result_umat.F, result_umat.theta)
+        result_model: list[ModelResult] = simulate_model(model, result_umat.F, result_umat.theta)
         # Since the model results are batched, we vmap the rest of the functions. we need to
         # make sure that some initializations are then batched. This include plastic_defgrad and
         # theta that we receive from umat model
@@ -258,8 +281,10 @@ def validate(circular_val_loader, model: nn.Module, cfg: Config, writer: Summary
         rotated_slip_system = vmap(rotate_slip_system, in_dims=(None, 0))(SlipSys, rm)
         rotated_elastic_stiffness = vmap(rotate_elastic_stiffness, in_dims=(None, 0))(ElasStif, rm)
 
-        # initial the stress history with zero stress
+        # initial the stress history, gamma history and slipresistance
         stress_hist: list[Float[Tensor, "6"]] = [to_Voigt(torch.zeros(3, 3).to(model_dtype))]
+        gamma_hist: list[Float[Tensor, "24"]] = [torch.zeros(24).to(model_dtype)]
+        slipresistance_hist: list[Float[Tensor, "24"]] = [consts.s0_F * torch.ones(24).to(model_dtype)]
 
         for model_result0, model_result1 in pairwise(result_model):
             plastic_defgrad = vmap(plastic_def_grad)(
@@ -267,21 +292,68 @@ def validate(circular_val_loader, model: nn.Module, cfg: Config, writer: Summary
             )
             cauchy_stress = vmap(get_cauchy_stress)(model_result1.defgrad, plastic_defgrad, rotated_elastic_stiffness)
             stress_hist.append(to_Voigt(cauchy_stress.squeeze().clone()))
+            gamma_hist.append(model_result1.gamma.squeeze().clone())
+            slipresistance_hist.append(model_result1.slip_resistance.squeeze().clone())
 
-        relative_error = compare_results(
-            stress_umat=torch.tensor(result_umat.stress),
-            stress_model=torch.stack(stress_hist),
+        rel_err_stress, rel_err_gamma, rel_err_slipresistance = get_relative_errors(
+            stress_hist, gamma_hist, slipresistance_hist, result_umat
         )
-        relative_errors.append(relative_error)
+        print(f"Relative difference between umat and model: {rel_err_stress:.4f}")
+
+        relative_errors_stress.append(rel_err_stress)
+        relative_errors_gamma.append(rel_err_gamma)
+        relative_errors_slipresistance.append(rel_err_slipresistance)
+
         stress_histories.append(torch.stack(stress_hist).numpy())
+        gamma_histories.append(torch.stack(gamma_hist).numpy())
+        slipresistance_histories.append(torch.stack(slipresistance_hist).numpy())
 
-    mean_relative_error = torch.tensor(relative_errors).mean()
-    writer.add_scalar("validation/ave_relative_error", mean_relative_error, n_step)
+    mean_relative_error_stress = torch.tensor(relative_errors_stress).mean()
+    writer.add_scalar("validation/stress/ave_relative_error", mean_relative_error_stress, n_step)
 
-    plot_stress(stress_histories, results_umat, relative_errors, writer, n_step)
+    plot_results(
+        stress_histories,
+        gamma_histories,
+        slipresistance_histories,
+        results_umat,
+        relative_errors_stress,
+        writer,
+        n_step,
+    )
 
 
-def get_plot(stress_umat: Float[ndarray, "N 6"], stress_model: Float[ndarray, "N 6"]):
+def relative_error(v1: Tensor, v2: Tensor) -> Tensor:
+    """
+    returns relative error in norm with respect to v2
+    """
+    assert v1.shape == v2.shape, f"Shapes for two tensors should be the same. Got v1: {v1.shape}, v2: {v2.shape}"
+    return (v1 - v2).norm() / v2.norm()
+
+
+def get_relative_errors(
+    stress_hist: list[Tensor], gamma_hist: list[Tensor], slipresistance_hist: list[Tensor], result_umat: UMATResult
+) -> Tuple[float, float, float]:
+    gamma_model = torch.stack(gamma_hist)
+    gamma_umat = extract_gamma_from_umat_sim(result_umat)
+    rel_err_gamma = relative_error(gamma_model, gamma_umat).item()
+    #
+    slipresistance_model = torch.stack(slipresistance_hist)
+    slipresistance_umat = extract_slipresistance_from_umat_sim(result_umat)
+    rel_err_slipresistance = relative_error(slipresistance_model, slipresistance_umat).item()
+    #
+    stress_model = torch.stack(stress_hist)
+    stress_umat = torch.from_numpy(result_umat.stress.copy())
+    rel_err_stress = relative_error(stress_model, stress_umat).item()
+
+    return rel_err_stress, rel_err_gamma, rel_err_slipresistance
+
+
+def plot_internal_variabels(intvar_histories, result_model, relative_errors, writer, n_step):
+    assert len(intvar_histories) == len(result_model)
+    max_err_idx = torch.tensor(relative_errors).argmax().item()
+
+
+def get_stress_plot(stress_umat: Float[ndarray, "N 6"], stress_model: Float[ndarray, "N 6"]) -> BytesIO:
     fig, axes = plt.subplots(2, 3, figsize=(10, 6))
     ts = np.linspace(0, 1, stress_umat.shape[0])
     stress_component_labels = "11 22 33 12 13 23".split()
@@ -302,23 +374,69 @@ def get_plot(stress_umat: Float[ndarray, "N 6"], stress_model: Float[ndarray, "N
     return fig_to_buffer(fig, dpi=120)
 
 
-def plot_stress(
+def get_intvars_plot(
+    gamma_umat: Float[ndarray, "N 24"],
+    gamma_model: Float[ndarray, "N 24"],
+    slipresistance_umat: Float[ndarray, "N 24"],
+    slipresistance_model: Float[ndarray, "N 24"],
+) -> BytesIO:
+    fig, axes = plt.subplots(1, 2, figsize=(6.6, 3))
+    ax1, ax2 = axes
+    ts = np.linspace(0, 1, gamma_umat.shape[0])
+
+    ax1.set_title("gamma")
+    ax2.set_title("slip resistance")
+
+    ax1.plot(ts, np.linalg.norm(gamma_umat, axis=1))
+    ax1.plot(ts, np.linalg.norm(gamma_model, axis=1))
+
+    ax2.plot(ts, np.linalg.norm(slipresistance_umat, axis=1))
+    ax2.plot(ts, np.linalg.norm(slipresistance_model, axis=1))
+
+    plt.tight_layout()
+
+    return fig_to_buffer(fig, dpi=200)
+
+
+def to_image_tensor(img_buffer: BytesIO) -> Tensor:
+    return torch.from_numpy(np.array(Image.open(img_buffer))).permute(2, 0, 1).squeeze(0) / 255.0
+
+
+def plot_results(
     stress_histories: list[Float[ndarray, "N 6"]],
+    gamma_histories: list[Float[ndarray, "N 24"]],
+    slipresistance_histories: list[Float[ndarray, "N 24"]],
     results_umat: list[UMATResult],
-    relative_erros: list[Tensor],
+    relative_erros_stress: list[float],
     writer: SummaryWriter,
     n_step: int,
 ) -> None:
 
-    assert len(stress_histories) == len(results_umat) == len(relative_erros)
+    assert (
+        len(stress_histories)
+        == len(gamma_histories)
+        == len(slipresistance_histories)
+        == len(results_umat)
+        == len(relative_erros_stress)
+    )
     # get the worst case
-    max_err_idx = torch.tensor(relative_erros).argmax().item()
+    max_err_idx = torch.tensor(relative_erros_stress).argmax().item()
 
     stress_model = stress_histories[max_err_idx]
+    gamma_model = gamma_histories[max_err_idx]
+    slipresistance_model = slipresistance_histories[max_err_idx]
+
     stress_umat = results_umat[max_err_idx].stress
-    image_buffer = get_plot(stress_umat, stress_model)
-    image_tensor = torch.from_numpy(np.array(Image.open(image_buffer))).permute(2, 0, 1).squeeze(0) / 255.0
-    writer.add_image(f"Validation/Stress/Step{n_step}", image_tensor, global_step=n_step)
+    gamma_umat = extract_gamma_from_umat_sim(results_umat[max_err_idx])
+    slipresistance_umat = extract_slipresistance_from_umat_sim(results_umat[max_err_idx])
+
+    img_buffer_stress = get_stress_plot(stress_umat, stress_model)
+    img_tensor_stress = to_image_tensor(img_buffer_stress)
+    writer.add_image(f"Validation/stress/Step_{n_step}", img_tensor_stress, global_step=n_step)
+
+    img_buffer_intvar = get_intvars_plot(gamma_umat, gamma_model, slipresistance_umat, slipresistance_model)
+    img_tensor_intvar = to_image_tensor(img_buffer_intvar)
+    writer.add_image(f"Validation/intvar/Step_{n_step}", img_tensor_intvar, global_step=n_step)
 
 
 def train(cfg: Config, writer: SummaryWriter) -> None:
