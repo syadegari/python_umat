@@ -57,6 +57,14 @@ class SampledValues:
 
 
 class PriotorizedReplayBuffer:
+    """
+    Priotorized Experience Replay Buffer
+
+    There are a couple of differences with a the usual implementaion:
+    - Copied from DRL exmaples and modified to work with generic data.
+    - Beta is clipped from above to 1.0 since our training is open ended.
+    """
+
     def __init__(
         self,
         buffer_size,
@@ -99,7 +107,7 @@ class PriotorizedReplayBuffer:
         Anneals beta linearly from its initial value, beta_0 to 1.
         Check section 3.4 of the paper on Prio Exp Replay
         """
-        return (1 - self.beta_0) * i_step / self.n_total_steps + self.beta_0
+        return min(1.0, (1 - self.beta_0) * i_step / self.n_total_steps + self.beta_0)
 
     def sample(self, i_step: int) -> SampledValues:
 
@@ -114,12 +122,7 @@ class PriotorizedReplayBuffer:
         probabilities = priorities**self.alpha
         probabilities /= probabilities.sum()
 
-        sampled_indices = np.random.choice(
-            N,
-            self.batch_size,
-            replace=False,
-            p=probabilities,
-        )
+        sampled_indices = np.random.choice(N, self.batch_size, replace=False, p=probabilities)
         samples = [self.buffer[idx] for idx in sampled_indices]
 
         weights = (N * probabilities[sampled_indices]) ** (-beta)

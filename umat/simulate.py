@@ -330,7 +330,7 @@ def train(cfg: Config, writer: SummaryWriter) -> None:
     circular_val_loader = circular_loader(val_loader)
     # TODO: `n_total_steps` is too small with current setup.
     #        Think how this can be enhanced. Understand how annealing works.
-    buffer = PriotorizedReplayBuffer(cfg.buffer_size, cfg.batch_size, 101, n_total_steps=cfg.N_iteration)
+    buffer = PriotorizedReplayBuffer(cfg.buffer_size, cfg.batch_size, 101, n_total_steps=cfg.buffer_n_steps)
     model = Model(nn.Tanh()).to(torch.float64)
     optimizer = torch.optim.Adam(model.parameters(), cfg.lr)
     #
@@ -356,9 +356,9 @@ def train(cfg: Config, writer: SummaryWriter) -> None:
             print(len(buffer))
             update_buffer(circular_train_loader, buffer, cfg)
 
-        for idx_iteration in range(1, cfg.N_iteration + 1):
+        for _ in range(1, cfg.N_iteration + 1):
             n_step += 1
-            sampled_values: SampledValues = buffer.sample(idx_iteration)
+            sampled_values: SampledValues = buffer.sample(n_step)
             xs, ys = model.make_batch(sampled_values, cfg)
             ys_hat = model.forward(xs)
             loss, td_error, loss_items_dict = loss_fn.forward(ys, ys_hat, xs, sampled_values.weights, cfg)

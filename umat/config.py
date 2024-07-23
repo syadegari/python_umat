@@ -12,6 +12,7 @@ class Config:
     buffer_size: int = None
     min_buffer_size: int = None
     batch_size: int = None  # for training and sampling from the buffer
+    buffer_n_steps: int = None  # Used for annealing beta
 
     N_iteration: int = None
     N_validation: int = None
