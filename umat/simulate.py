@@ -362,7 +362,7 @@ def train(cfg: Config, writer: SummaryWriter) -> None:
             xs, ys = model.make_batch(sampled_values, cfg)
             ys_hat = model.forward(xs)
             loss, td_error, loss_items_dict = loss_fn.forward(ys, ys_hat, xs, sampled_values.weights, cfg)
-            log_losses(loss, loss_items_dict, td_error, optimizer, scheduler, writer, n_step)
+            log_losses(loss, loss_items_dict, td_error, optimizer, scheduler, buffer, writer, n_step)
             if n_step % 100 == 0:
                 print(loss.data)
             train_model(loss, optimizer, scheduler)
@@ -378,6 +378,7 @@ def log_losses(
     td_error: Float[ndarray, "batch"],
     optimizer: Optimizer,
     scheduler: _LRScheduler,
+    replay_buffer: PriotorizedReplayBuffer,
     writer: SummaryWriter,
     n_step: int,
 ) -> None:
@@ -395,6 +396,8 @@ def log_losses(
     quantiles = np.quantile(td_error, [0.25, 0.50, 0.75], axis=0)
     td_statistics_2 = {"25% quantile": quantiles[0], "50% quantile": quantiles[1], "75% quantile": quantiles[2]}
     writer.add_scalars("TDErrorQuantiles", td_statistics_2, n_step)
+
+    writer.add_scalar("beta", replay_buffer.get_beta(n_step), global_step=n_step)
 
     if scheduler is not None:
         writer.add_scalar("LearningRate", optimizer.param_groups[0]["lr"], global_step=n_step)
