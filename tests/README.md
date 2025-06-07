@@ -3,7 +3,7 @@
 This directory contains tests for the python_umat project, which implements a crystal plasticity model. The tests are organized to validate various aspects of the model, including computational correctness, Fortran-to-Python/PyTorch porting, and residual calculations.
 Root-Level Tests
 
-The root of the `tests/` directory includes unit tests that verify the correctness of individual computational components of the crystal plasticity model. hese tests can be executed from the repository's root directory using:
+The root of the `tests/` directory includes unit tests that verify the correctness of individual computational components of the crystal plasticity model. These tests can be executed from the repository's root directory using:
 
 ```bash
 python -m unittest tests.test_umat -v
