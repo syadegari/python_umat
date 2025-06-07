@@ -11,7 +11,7 @@ python -m unittest tests.test_umat -v
 
 These tests ensure that fundamental calculations and algorithms behave as expected.
 
-## `einsum_test/` and `rotation_matrix_test/`
+## [`einsum_test`](./einsum_test) and [`rotation_matrix_test`](./rotation_matrix_test)
 
 These subdirectories contain tests related to porting the model from Fortran to Python/PyTorch. They includes:
 
@@ -19,7 +19,7 @@ These subdirectories contain tests related to porting the model from Fortran to 
 
    - Performance Benchmarks: Assess the performance differences between implementations.
 
-## `residual_investigation/`
+## [`residual_investigation`](./residual_investigation)
 
 Tests in this folder focus on the correctness of residual calculations within the model. They aim to:
 
