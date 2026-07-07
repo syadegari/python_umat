@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-
+# TODO: Add jax type hints
 def rotate_slip_systems(SlipSys, RM):
     return torch.einsum("kij, ai, bj -> kab", SlipSys, RM, RM)
 
