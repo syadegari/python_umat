@@ -21,8 +21,6 @@ coverage run -m unittest discover
 coverage report -m
 ```
 
-## List of code modification
-
 ### TODO
 
 - [ ] Implement barrier penalty formulation.
